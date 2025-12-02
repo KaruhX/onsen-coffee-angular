@@ -1,0 +1,35 @@
+<div class="flex flex-col min-h-screen bg-linear-to-b from-emerald-50 to-white">
+  <header class="bg-white shadow-md sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="flex items-center justify-between py-4">
+        <a routerLink="/" class="text-3xl font-bold text-emerald-900 hover:text-emerald-700 transition">
+          ☕ Onsen
+        </a>
+        <nav class="flex gap-8">
+          <a routerLink="/coffees" class="font-semibold text-gray-700 hover:text-emerald-600">
+            Coffees
+          </a>
+          <a routerLink="/users" class="font-semibold text-gray-700 hover:text-emerald-600">
+            Users
+          </a>
+          <a routerLink="/cart" class="font-semibold text-gray-700 hover:text-emerald-600">
+            Cart
+          </a>
+          <a routerLink="/admin" class="font-semibold text-gray-700 hover:text-emerald-600">
+            Admin
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+    <h1 class="text-4xl font-extrabold text-center text-emerald-900 mb-8">Onsen Coffee</h1>
+    <router-outlet />
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-center py-4 text-gray-600 text-sm mt-8">
+    <p>&copy; 2024 Onsen Coffee. All rights reserved.</p>
+  </footer>
+</div>
