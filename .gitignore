@@ -47,3 +47,4 @@ pip-delete-this-directory.txt
 .project
 .pydevproject
 .ropeproject
+*.code-workspace

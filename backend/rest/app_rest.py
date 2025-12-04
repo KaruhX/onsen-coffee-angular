@@ -1,5 +1,5 @@
 from flask import jsonify
-import db.store_repo as repo 
+import repository.store_repo as repo 
 
 def register_routes(app):
     rest_route = "/api"
@@ -15,4 +15,7 @@ def register_routes(app):
     @app.route(f"{rest_route}/users")
     def obtainUsers():
         return jsonify(repo.obtainUsers())
-        
+    
+    @app.route(f"{rest_route}/coffees/<int:coffee_id>")
+    def obtainCoffeeById(coffee_id):
+        return jsonify(repo.obtainCoffeeById(coffee_id))

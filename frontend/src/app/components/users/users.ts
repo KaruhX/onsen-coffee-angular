@@ -7,7 +7,6 @@ import { UserService } from '../../services/user-service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './users.html',
-  styleUrl: './users.css',
 })
 export class Users implements OnInit {
   protected readonly us = inject(UserService);

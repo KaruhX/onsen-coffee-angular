@@ -1,0 +1,26 @@
+<div class="p-6 bg-white rounded-lg shadow-lg max-w-2xl mx-auto">
+    <h2 class="text-3xl font-bold text-emerald-900 mb-6">Detalles del Café</h2>
+    
+    @if (coffee(); as coffeeData) {
+        <div class="space-y-4">
+            <h3 class="text-2xl font-bold text-emerald-800">{{ coffeeData.name }}</h3>
+            
+            <p class="text-gray-700">{{ coffeeData.description }}</p>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm font-semibold text-emerald-700">Origen</p>
+                    <p class="text-gray-600">{{ coffeeData.origin }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-emerald-700">Nivel de Tostado</p>
+                    <p class="text-gray-600">{{ coffeeData.roast}}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-emerald-700">Precio</p>
+                    <p class="text-gray-600">{{ coffeeData.price }} &euro;</p>
+                </div>
+            </div>
+        </div>
+    } 
+</div>
