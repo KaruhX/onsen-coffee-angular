@@ -43,3 +43,9 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
 }
+
+export interface CartItem {
+  coffeeId: number;
+  quantity: number;
+  coffee?: Coffee;
+}

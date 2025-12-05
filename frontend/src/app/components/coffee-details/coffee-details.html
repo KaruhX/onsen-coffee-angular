@@ -20,6 +20,9 @@
                     <p class="text-sm font-semibold text-emerald-700">Precio</p>
                     <p class="text-gray-600">{{ coffeeData.price }} &euro;</p>
                 </div>
+                <button class="col-span-2 bg-emerald-600 text-white py-2 px-4 rounded hover:bg-emerald-700 transition duration-200" (click)="addToCart(coffeeData.id)">
+                    Añadir al Carrito
+                </button>
             </div>
         </div>
     } 

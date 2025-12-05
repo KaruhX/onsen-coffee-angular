@@ -32,6 +32,6 @@ def obtainUserById(user_id):
     cur = con.cursor()
     cur.execute("SELECT id, email, first_name, last_name, phone, role, is_active, created_at FROM users WHERE id = ?", (user_id,))
     row = cur.fetchone()
-    user = dict(row) if row else {"error": "1 not found"}
+    user = dict(row) if row else {"error": "User not found"}
     con.close()
     return user

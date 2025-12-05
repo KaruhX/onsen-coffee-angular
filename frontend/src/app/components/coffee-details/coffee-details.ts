@@ -14,9 +14,14 @@ export class CoffeeDetails implements OnInit {
   protected readonly coffeeService = inject(CoffeeService);
   protected readonly coffee = signal<Coffee | null>(null);
   protected coffee_id = -1;
+
+  protected addToCart(coffeeId: number) {
+    this.coffeeService.addToCart(coffeeId, 1).subscribe(() => {
+      console.log(`Coffee with ID ${coffeeId} added to cart.`)
+    })
+  }
   
   ngOnInit() {
-    // Fetch coffee details using coffee_id
     this.coffee_id = Number(this.activatedRoute.snapshot.paramMap.get('id'));
     console.log('Coffee ID:', this.coffee_id);
     this.coffeeService.getCoffeeById(this.coffee_id).subscribe((data: any) => {
