@@ -1,11 +1,18 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLinkWithHref } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Component, HostListener } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
-	selector: 'app-root',
-	imports: [RouterOutlet, RouterLinkWithHref],
-	templateUrl: './app.html',
-	styleUrl: './app.css'
+  selector: 'app-root',
+  imports: [RouterOutlet, RouterLink, CommonModule],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App {
+  scrolled = false;
+
+  @HostListener('window:scroll')
+  onScroll() {
+    this.scrolled = window.scrollY > 50;
+  }
 }

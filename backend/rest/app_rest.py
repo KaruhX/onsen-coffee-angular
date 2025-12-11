@@ -81,3 +81,60 @@ def register_routes(app):
     def clearCart():
         session['cart'] = []
         return jsonify({"status": "ok", "cart": []})
+    
+    # ============ ORDERS ENDPOINTS ============
+    
+    @app.route(f"{rest_route}/orders", methods=["POST"])
+    def createOrder():
+        try:
+            data = request.get_json()
+            
+            # Validar campos requeridos
+            required_fields = ['customer_name', 'customer_email', 'shipping_address', 'items']
+            for field in required_fields:
+                if not data.get(field):
+                    return jsonify({"error": f"El campo {field} es requerido"}), 400
+            
+            if not data.get('items') or len(data.get('items', [])) == 0:
+                return jsonify({"error": "El carrito está vacío"}), 400
+            
+            result = repo.registerOrder(data)
+            
+            # Limpiar carrito después de crear pedido
+            session['cart'] = []
+            
+            return jsonify(result)
+        except ValueError as ve:
+            return jsonify({"error": str(ve)}), 400
+        except Exception as e:
+            return jsonify({"error": f"Error al procesar pedido: {str(e)}"}), 500
+    
+    @app.route(f"{rest_route}/orders/<int:order_id>")
+    def getOrder(order_id):
+        order = repo.getOrderById(order_id)
+        if not order:
+            return jsonify({"error": "Pedido no encontrado"}), 404
+        return jsonify(order)
+    
+    @app.route(f"{rest_route}/orders/by-email/<email>")
+    def getOrdersByEmail(email):
+        orders = repo.getOrdersByEmail(email)
+        return jsonify(orders)
+    
+    @app.route(f"{rest_route}/orders")
+    def getAllOrders():
+        orders = repo.getAllOrders()
+        return jsonify(orders)
+    
+    @app.route(f"{rest_route}/orders/<int:order_id>/status", methods=["PUT"])
+    def updateOrderStatus(order_id):
+        data = request.get_json()
+        status = data.get('status')
+        tracking_number = data.get('tracking_number')
+        
+        valid_statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
+        if status not in valid_statuses:
+            return jsonify({"error": f"Estado no válido. Usa: {', '.join(valid_statuses)}"}), 400
+        
+        result = repo.updateOrderStatus(order_id, status, tracking_number)
+        return jsonify(result)

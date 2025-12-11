@@ -3,11 +3,12 @@
 Schema de Base de Datos para Onsen Coffee - E-commerce de Café de Especialidad
 """
 
-import sqlite3
 import os
+import sqlite3
+import tempfile
 
-# Ruta de la base de datos en la carpeta db
-DB_PATH = os.path.join(os.path.dirname(__file__), 'onsen-coffee.db')
+# Ruta en /tmp para funcionar en entornos serverless de solo lectura
+DB_PATH = os.path.join(tempfile.gettempdir(), 'onsen-coffee.db')
 
 def get_connection():
     """Obtiene conexión a la base de datos"""
@@ -59,14 +60,26 @@ def create_tables():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            status VARCHAR(30) DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled')),
+            user_id INTEGER,
+            status VARCHAR(30) DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')),
             subtotal DECIMAL(10,2) NOT NULL,
-            shipping_cost DECIMAL(10,2) DEFAULT 0,
+            shipping_cost DECIMAL(10,2) DEFAULT 4.99,
             total DECIMAL(10,2) NOT NULL,
-            shipping_address TEXT,
+            customer_name VARCHAR(200) NOT NULL,
+            customer_email VARCHAR(255) NOT NULL,
+            customer_phone VARCHAR(30),
+            shipping_address TEXT NOT NULL,
+            shipping_city VARCHAR(100),
+            shipping_postal_code VARCHAR(20),
+            shipping_country VARCHAR(100) DEFAULT 'España',
+            payment_method VARCHAR(50) DEFAULT 'card' CHECK(payment_method IN ('card', 'paypal', 'transfer', 'cash_on_delivery')),
+            payment_status VARCHAR(30) DEFAULT 'pending' CHECK(payment_status IN ('pending', 'completed', 'failed', 'refunded')),
+            tracking_number VARCHAR(100),
+            notes TEXT,
+            estimated_delivery DATE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         )
     ''')
     
@@ -112,14 +125,14 @@ def insert_seed_data():
     
     # Productos de ejemplo
     products = [
-        ('Ethiopian Yirgacheffe', 'Etiopía', 'medio', 'Lavado', 'Floral, cítrico, bergamota', 'Café de especialidad con notas brillantes', 299.00, 250, 50, '/images/ethiopia.jpg'),
-        ('Colombian Geisha', 'Colombia', 'claro', 'Honey', 'Jazmín, durazno, miel', 'Geisha excepcional de finca de altura', 450.00, 250, 30, '/images/geisha.jpg'),
-        ('Kenyan AA', 'Kenia', 'medio', 'Lavado', 'Grosella, tomate, vino', 'Acidez vibrante y compleja', 320.00, 250, 40, '/images/kenya.jpg'),
-        ('Sumatra Mandheling', 'Indonesia', 'oscuro', 'Wet-hulled', 'Chocolate, terroso, especias', 'Cuerpo intenso y notas profundas', 280.00, 250, 45, '/images/sumatra.jpg'),
-        ('Costa Rica Tarrazú', 'Costa Rica', 'medio', 'Lavado', 'Manzana verde, caramelo, nuez', 'Balance perfecto y dulzura natural', 310.00, 250, 35, '/images/costarica.jpg'),
-        ('Guatemala Antigua', 'Guatemala', 'medio', 'Lavado', 'Chocolate, nuez, cítrico', 'Cuerpo completo con final dulce', 285.00, 250, 60, '/images/guatemala.jpg'),
-        ('Brazil Santos', 'Brasil', 'oscuro', 'Natural', 'Nuez, chocolate, bajo en acidez', 'Suave y equilibrado para espresso', 220.00, 250, 80, '/images/brazil.jpg'),
-        ('Panama Geisha', 'Panamá', 'claro', 'Lavado', 'Jazmín, bergamota, tropical', 'El café más exclusivo del mundo', 890.00, 250, 15, '/images/panama.jpg')
+        ('Ethiopian Yirgacheffe', 'Etiopía', 'medio', 'Lavado', 'Floral, cítrico, bergamota', 'Café de especialidad con notas brillantes', 32.99, 250, 50, 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80'),
+        ('Colombian Geisha', 'Colombia', 'claro', 'Honey', 'Jazmín, durazno, miel', 'Geisha excepcional de finca de altura', 45.00, 250, 30, 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80'),
+        ('Kenyan AA', 'Kenia', 'medio', 'Lavado', 'Grosella, tomate, vino', 'Acidez vibrante y compleja', 38.50, 250, 40, 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80'),
+        ('Sumatra Mandheling', 'Indonesia', 'oscuro', 'Wet-hulled', 'Chocolate, terroso, especias', 'Cuerpo intenso y notas profundas', 34.99, 250, 45, 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80'),
+        ('Costa Rica Tarrazú', 'Costa Rica', 'medio', 'Lavado', 'Manzana verde, caramelo, nuez', 'Balance perfecto y dulzura natural', 36.00, 250, 35, 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80'),
+        ('Guatemala Antigua', 'Guatemala', 'medio', 'Lavado', 'Chocolate, nuez, cítrico', 'Cuerpo completo con final dulce', 33.50, 250, 60, 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80'),
+        ('Brazil Santos', 'Brasil', 'oscuro', 'Natural', 'Nuez, chocolate, bajo en acidez', 'Suave y equilibrado para espresso', 30.00, 250, 80, 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80'),
+        ('Panama Geisha', 'Panamá', 'claro', 'Lavado', 'Jazmín, bergamota, tropical', 'El café más exclusivo del mundo', 49.99, 250, 15, 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80')
     ]
     
     cursor.executemany('''
@@ -137,26 +150,8 @@ def insert_seed_data():
         (3, 'cancelled', 320.00, 99.00, 419.00, 'Calle Juárez 456, Guadalajara, CP 44100')
     ]
     
-    cursor.executemany('''
-        INSERT OR IGNORE INTO orders (user_id, status, subtotal, shipping_cost, total, shipping_address)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', orders)
-    
-    # Items de pedidos
-    order_items = [
-        (1, 1, 2, 299.00),  # Pedido 1: 2x Ethiopian
-        (2, 2, 1, 450.00),  # Pedido 2: 1x Colombian Geisha
-        (3, 3, 2, 320.00),  # Pedido 3: 2x Kenyan
-        (3, 4, 1, 280.00),  # Pedido 3: 1x Sumatra
-        (4, 6, 1, 285.00),  # Pedido 4: 1x Guatemala
-        (5, 8, 2, 890.00),  # Pedido 5: 2x Panama Geisha
-        (6, 3, 1, 320.00),  # Pedido 6: 1x Kenyan (cancelado)
-    ]
-    
-    cursor.executemany('''
-        INSERT OR IGNORE INTO order_items (order_id, product_id, quantity, unit_price)
-        VALUES (?, ?, ?, ?)
-    ''', order_items)
+    # No insertamos órdenes de ejemplo, solo clientes y productos
+    # Los pedidos se crean a través del flujo de checkout
     
     conn.commit()
     conn.close()

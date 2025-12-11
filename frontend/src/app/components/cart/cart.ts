@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { CoffeeService } from '../../services/coffee-service';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './cart.html',
 })
 export class Cart implements OnInit {
   private readonly coffeeService = inject(CoffeeService);
+  private readonly router = inject(Router);
 
   readonly cart = this.coffeeService.cart;
   readonly cartCount = this.coffeeService.cartCount;
@@ -33,5 +35,9 @@ export class Cart implements OnInit {
 
   clearCart(): void {
     this.coffeeService.clearCart().subscribe();
+  }
+
+  proceedToCheckout() {
+    this.router.navigate(['checkout']);
   }
 }

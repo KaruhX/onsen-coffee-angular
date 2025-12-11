@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { forkJoin, map, Observable, tap } from 'rxjs';
-import { CartItem, Coffee } from '../models';
+import { CartItem, CheckoutData, Coffee, Order } from '../model/models';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +19,8 @@ export class CoffeeService {
   readonly cartTotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + (item.coffee?.price || 0) * item.quantity, 0)
   );
+  readonly shippingCost = computed(() => (this.cartTotal() > 0 ? 4.99 : 0));
+  readonly orderTotal = computed(() => this.cartTotal() + this.shippingCost());
 
   getCoffees(): Observable<Coffee[]> {
     return this.http
@@ -81,5 +83,30 @@ export class CoffeeService {
     return this.http
       .delete<{ status: string; cart: CartItem[] }>(`${this.apiUrl}/cart`)
       .pipe(tap((res) => this.cartItems.set(this.enrichCart(res.cart))));
+  }
+
+  // ============ ORDERS ============
+
+  createOrder(
+    checkoutData: CheckoutData
+  ): Observable<{ status: string; order_id: number; total: number }> {
+    return this.http
+      .post<{ status: string; order_id: number; total: number }>(
+        `${this.apiUrl}/orders`,
+        checkoutData
+      )
+      .pipe(tap(() => this.cartItems.set([])));
+  }
+
+  getOrderById(orderId: number): Observable<Order> {
+    return this.http.get<Order>(`${this.apiUrl}/orders/${orderId}`);
+  }
+
+  getOrdersByEmail(email: string): Observable<Order[]> {
+    return this.http.get<Order[]>(`${this.apiUrl}/orders/by-email/${email}`);
+  }
+
+  getAllOrders(): Observable<Order[]> {
+    return this.http.get<Order[]>(`${this.apiUrl}/orders`);
   }
 }

@@ -1,29 +1,104 @@
-<div class="p-6 bg-white rounded-lg shadow-lg max-w-2xl mx-auto">
-    <h2 class="text-3xl font-bold text-emerald-900 mb-6">Detalles del Café</h2>
-    
-    @if (coffee(); as coffeeData) {
-        <div class="space-y-4">
-            <h3 class="text-2xl font-bold text-emerald-800">{{ coffeeData.name }}</h3>
-            
-            <p class="text-gray-700">{{ coffeeData.description }}</p>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-semibold text-emerald-700">Origen</p>
-                    <p class="text-gray-600">{{ coffeeData.origin }}</p>
+<!-- Hero Section -->
+<section class="relative min-h-[40vh] bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 pt-24 pb-12">
+    <div class="absolute inset-0 opacity-10"
+        style="background-image: url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1920&q=80'); background-size: cover;">
+    </div>
+    <div class="relative max-w-7xl mx-auto px-6">
+        <a routerLink="/coffees"
+            class="inline-flex items-center gap-2 text-emerald-200 hover:text-white transition-colors mb-8 group">
+            <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver a productos
+        </a>
+    </div>
+</section>
+
+<!-- Product Section -->
+<section class="relative -mt-20 pb-20">
+    <div class="max-w-7xl mx-auto px-6">
+        @if (coffee(); as coffeeData) {
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                <!-- Image -->
+                <div class="relative h-80 lg:h-full min-h-[400px] bg-gradient-to-br from-emerald-100 to-emerald-50">
+                    @if(coffeeData.image_url) {
+                    <img [src]="coffeeData.image_url" [alt]="coffeeData.name" class="w-full h-full object-cover">
+                    } @else {
+                    <img [src]="getDefaultImage()" [alt]="coffeeData.name" class="w-full h-full object-cover">
+                    }
+                    <!-- Badge -->
+                    <span
+                        class="absolute top-6 left-6 px-4 py-2 rounded-full text-sm font-medium bg-white/90 backdrop-blur-sm text-emerald-800 shadow-lg">
+                        Tueste {{ coffeeData.roast }}
+                    </span>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-emerald-700">Nivel de Tostado</p>
-                    <p class="text-gray-600">{{ coffeeData.roast}}</p>
+
+                <!-- Content -->
+                <div class="p-8 lg:p-12">
+                    <div class="mb-8">
+                        <span class="text-emerald-600 font-medium text-sm uppercase tracking-wide">{{ coffeeData.origin
+                            }}</span>
+                        <h1 class="text-4xl font-light text-gray-900 mt-2 mb-4">{{ coffeeData.name }}</h1>
+                        <p class="text-gray-600 text-lg leading-relaxed">{{ coffeeData.description }}</p>
+                    </div>
+
+                    <!-- Flavor Notes -->
+                    @if(coffeeData.flavor_notes) {
+                    <div class="mb-8">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Notas de Sabor</h3>
+                        <div class="flex flex-wrap gap-2">
+                            @for(note of coffeeData.flavor_notes.split(','); track note) {
+                            <span class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium">{{
+                                note.trim() }}</span>
+                            }
+                        </div>
+                    </div>
+                    }
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-2 gap-6 mb-8 p-6 bg-gray-50 rounded-2xl">
+                        <div>
+                            <span class="text-sm text-gray-500 block mb-1">Proceso</span>
+                            <span class="text-gray-900 font-medium">{{ coffeeData.process || 'Natural' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500 block mb-1">Peso</span>
+                            <span class="text-gray-900 font-medium">{{ coffeeData.weight_grams }}g</span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500 block mb-1">Stock</span>
+                            <span class="text-gray-900 font-medium">{{ coffeeData.stock }} unidades</span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500 block mb-1">Tueste</span>
+                            <span class="text-gray-900 font-medium capitalize">{{ coffeeData.roast }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Price & Actions -->
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-6 border-t border-gray-200">
+                        <div>
+                            <span class="text-sm text-gray-500 block">Precio</span>
+                            <span class="text-4xl font-medium text-emerald-600">€{{ coffeeData.price }}</span>
+                        </div>
+                        <div class="flex gap-3 w-full sm:w-auto">
+                            <button
+                                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:-translate-y-0.5"
+                                (click)="addToCart(coffeeData.id)">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Añadir al Carrito
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-emerald-700">Precio</p>
-                    <p class="text-gray-600">{{ coffeeData.price }} &euro;</p>
-                </div>
-                <button class="col-span-2 bg-emerald-600 text-white py-2 px-4 rounded hover:bg-emerald-700 transition duration-200" (click)="addToCart(coffeeData.id)">
-                    Añadir al Carrito
-                </button>
             </div>
         </div>
-    } 
-</div>
+        }
+    </div>
+</section>
