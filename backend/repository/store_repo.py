@@ -1,4 +1,4 @@
-from db.schema import get_connection
+from db.connection import get_connection
 
 def obtainCoffees():
     con = get_connection()
