@@ -1,4 +1,4 @@
-from flask import app, jsonify, render_template, request, session, url_for
+from flask import jsonify, render_template, request, session, url_for
 import repository.store_repo as store_repo
 import os
 from werkzeug.utils import secure_filename
