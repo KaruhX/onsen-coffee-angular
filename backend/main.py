@@ -23,8 +23,12 @@ Session(app)
 def init():
     return "Python Backend is running"
 
-app_rest.register_routes(app)
+# app_rest.register_routes(app)
+# admin.register_routes(app)
+from rest.app_rest import register_routes as register_rest_routes
+register_rest_routes(app)
 admin.register_routes(app)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
