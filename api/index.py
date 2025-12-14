@@ -47,25 +47,21 @@ except Exception as e:
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
     def catch_all(path):
+        cwd = os.getcwd()
+        backend_files = os.listdir(str(BACKEND_DIR)) if os.path.exists(str(BACKEND_DIR)) else 'Backend dir not found'
         return f"""
         <h1>Error importing backend application</h1>
         <p>Check Vercel logs for more details.</p>
         <pre style="background: #f4f4f4; padding: 10px; overflow: auto;">{import_error_msg}</pre>
         <h2>Debug Info</h2>
         <ul>
+            <li>CWD: {cwd}</li>
             <li>Python Path: {sys.path}</li>
-            <li>Current Directory: {os.getcwd()}</li>
-            <li>Files in current dir: {os.listdir('.')}</li>
+            <li>Files in CWD: {os.listdir(cwd)}</li>
+            <li>Backend files: {backend_files}</li>
         </ul>
         """, 500
 
 # This is the entry point for Vercel
 # Vercel will look for an 'app' variable
 logger.info("API handler ready")
-        <pre>
-CWD: {os.getcwd()}
-sys.path: {sys.path}
-Files in CWD: {os.listdir(os.getcwd())}
-Files in backend (if exists): {os.listdir(str(BACKEND_DIR)) if os.path.exists(str(BACKEND_DIR)) else 'Backend dir not found'}
-        </pre>
-        """, 500
