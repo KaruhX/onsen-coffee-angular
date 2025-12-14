@@ -1,7 +1,5 @@
 from flask import Flask
 from flask_session import Session
-from rest import app_rest
-from admin import admin
 import os
 import tempfile
 
@@ -19,15 +17,16 @@ app.config['SESSION_USE_SIGNER'] = True
 
 Session(app)
 
+# Register blueprints
+from rest.app_rest import register_routes as register_rest_routes
+from admin.admin import register_routes as register_admin_routes
+
+register_rest_routes(app)
+register_admin_routes(app)
+
 @app.route("/")
 def init():
     return "Python Backend is running"
-
-# app_rest.register_routes(app)
-# admin.register_routes(app)
-from rest.app_rest import register_routes as register_rest_routes
-register_rest_routes(app)
-admin.register_routes(app)
 
 
 if __name__ == '__main__':
