@@ -17,10 +17,6 @@ from admin.admin import register_routes as register_admin_routes
 register_rest_routes(app)
 register_admin_routes(app)
 
-@app.route("/")
-def init():
-    return "Python Backend is running"
-
 
 if __name__ == '__main__':
     app.run(debug=True)
