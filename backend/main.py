@@ -1,21 +1,14 @@
 from flask import Flask
-from flask_session import Session
 import os
-import tempfile
 
 app = Flask(__name__)
-app.secret_key = 'onsen-coffee-secret-key-2025'
+app.secret_key = os.environ.get('SECRET_KEY', 'onsen-coffee-secret-key-2025')
 
-# Persist sessions in /tmp so it works on ephemeral file systems (e.g., serverless)
-session_dir = os.path.join(tempfile.gettempdir(), 'onsen-coffee-sessions')
-os.makedirs(session_dir, exist_ok=True)
-
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = session_dir
-app.config['SESSION_PERMANENT'] = True
-app.config['SESSION_USE_SIGNER'] = True
-
-Session(app)
+# Usar sesiones simples basadas en cookies (mejor para serverless)
+app.config['SESSION_TYPE'] = 'null'  # Usa sesiones de Flask por defecto (cookies seguras)
+app.config['SESSION_COOKIE_SECURE'] = False  # True en producción con HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Register blueprints
 from rest.app_rest import register_routes as register_rest_routes
