@@ -4,10 +4,8 @@ import repository.store_repo as repo
 api = Blueprint('api', __name__)
 
 def register_routes(app):
-    # Register blueprint at /api for local dev (where /api is preserved)
-    # and at / for Vercel (where /api might be stripped)
+    # Register blueprint at /api for all routes
     app.register_blueprint(api, url_prefix='/api')
-    app.register_blueprint(api, url_prefix='/')
 
 @api.route("/")
 def init_rest():
