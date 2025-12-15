@@ -3,7 +3,14 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist/frontend/browser"
+      }
+    },
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
     },
     {
       "src": "admin/app.py",
@@ -14,6 +21,18 @@
     {
       "src": "/admin/(.*)",
       "dest": "admin/app.py"
+    },
+    {
+      "src": "/admin",
+      "dest": "admin/app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "api/index.py"
     },
     {
       "src": "/(.*)",

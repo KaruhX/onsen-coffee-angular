@@ -182,3 +182,122 @@ def updateOrderStatus(order_id, status, tracking_number=None):
     con.commit()
     con.close()
     return {"status": "ok"}
+
+def obtainOrders(status_filter='all'):
+    con = get_connection()
+    cur = con.cursor()
+    
+    if status_filter == 'all':
+        cur.execute("""
+            SELECT * FROM orders 
+            ORDER BY created_at DESC
+        """)
+    else:
+        cur.execute("""
+            SELECT * FROM orders 
+            WHERE status = ?
+            ORDER BY created_at DESC
+        """, (status_filter,))
+    
+    orders = []
+    for row in cur.fetchall():
+        order = dict(row)
+        
+        # Obtener items del pedido
+        cur_items = con.cursor()
+        cur_items.execute("""
+            SELECT oi.*, p.name, p.image_url
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        """, (order['id'],))
+        
+        items = []
+        for item_row in cur_items.fetchall():
+            item_dict = dict(item_row)
+            items.append({
+                'name': item_dict['name'],
+                'quantity': item_dict['quantity'],
+                'price': item_dict['unit_price'],
+                'image_url': item_dict.get('image_url')
+            })
+        
+        order['items'] = items
+        orders.append(order)
+    
+    con.close()
+    return orders
+
+def deleteOrder(order_id):
+    con = get_connection()
+    cur = con.cursor()
+    # Primero eliminar los items del pedido
+    cur.execute("DELETE FROM order_items WHERE order_id = ?", (order_id,))
+    # Luego eliminar el pedido
+    cur.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+    con.commit()
+    con.close()
+    return {"status": "ok"}
+
+def updateUserRole(user_id, role):
+    con = get_connection()
+    cur = con.cursor()
+    cur.execute("UPDATE users SET role = ? WHERE id = ?", (role, user_id))
+    con.commit()
+    con.close()
+    return {"status": "ok"}
+
+def deleteUser(user_id):
+    con = get_connection()
+    cur = con.cursor()
+    cur.execute("UPDATE users SET is_active = 0 WHERE id = ?", (user_id,))
+    con.commit()
+    con.close()
+    return {"status": "ok"}
+
+def updateCoffee(coffee_data):
+    con = get_connection()
+    cur = con.cursor()
+    coffee_id = coffee_data.get('id')
+    
+    cur.execute("""
+        UPDATE products 
+        SET name = ?, description = ?, price = ?, origin = ?, image_url = ?
+        WHERE id = ?
+    """, (
+        coffee_data.get('name'),
+        coffee_data.get('description'),
+        coffee_data.get('price'),
+        coffee_data.get('origin'),
+        coffee_data.get('image_url'),
+        coffee_id
+    ))
+    con.commit()
+    con.close()
+    return {"status": "ok"}
+
+def deleteCoffee(coffee_id):
+    con = get_connection()
+    cur = con.cursor()
+    cur.execute("UPDATE products SET is_active = 0 WHERE id = ?", (coffee_id,))
+    con.commit()
+    con.close()
+    return {"status": "ok"}
+
+def createUser(user_data):
+    con = get_connection()
+    cur = con.cursor()
+    cur.execute("""
+        INSERT INTO users (email, first_name, last_name, phone, role, is_active)
+        VALUES (?, ?, ?, ?, ?, 1)
+    """, (
+        user_data.get('email'),
+        user_data.get('first_name'),
+        user_data.get('last_name'),
+        user_data.get('phone', ''),
+        user_data.get('role', 'user')
+    ))
+    con.commit()
+    user_id = cur.lastrowid
+    con.close()
+    return {"status": "ok", "id": user_id}

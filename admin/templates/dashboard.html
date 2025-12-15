@@ -6,140 +6,290 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin | Onsen Coffee</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         body {
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .material-surface {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.02) 100%);
+            font-family: 'Inter', sans-serif;
         }
 
         .elevation-1 {
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
 
         .elevation-2 {
-            box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .elevation-3 {
-            box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .tab-active {
-            background: rgba(16, 185, 129, 0.1);
-            border-bottom: 3px solid #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+
+        .status-processing {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+        }
+
+        .status-cancelled {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #10b981 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.08);
         }
     </style>
 </head>
 
-<body class="material-surface min-h-screen">
+<body class="gradient-bg min-h-screen">
     <!-- Navbar -->
-    <nav class="bg-emerald-950 text-white elevation-2">
-        <div class="max-w-7xl mx-auto px-6 py-5">
+    <nav class="bg-white border-b border-gray-200 elevation-1">
+        <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-medium tracking-tight">Onsen Coffee Admin</h1>
-                <div class="flex items-center gap-4">
-                    <a href="/"
-                        class="text-emerald-100 hover:bg-white/10 px-4 py-2 rounded-full transition-all duration-200 font-medium">
-                        🏠 Ir a Tienda
-                    </a>
+                <div class="flex items-center gap-3">
+                    <span class="material-icons text-emerald-600 text-3xl">local_cafe</span>
+                    <h1 class="text-xl font-semibold text-gray-900">Onsen Coffee Admin</h1>
                 </div>
+                <a href="/"
+                    class="text-gray-600 hover:text-gray-900 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <span class="material-icons text-xl">storefront</span>
+                    <span>Ir a Tienda</span>
+                </a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-12">
+    <main class="max-w-7xl mx-auto px-6 py-8">
         <!-- Tabs -->
-        <div class="bg-white rounded-3xl elevation-2 overflow-hidden">
-            <div class="flex border-b-2 border-emerald-100">
+        <div class="bg-white rounded-lg elevation-2 overflow-hidden">
+            <div class="flex border-b border-gray-200">
                 <button onclick="showTab('orders')" id="orders-tab"
-                    class="flex-1 px-6 py-5 text-base font-medium text-emerald-900 transition-all duration-200 tab-active">
-                    📦 Pedidos
+                    class="flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 tab-active transition-colors">
+                    <span class="material-icons text-xl">shopping_cart</span>
+                    <span>Pedidos</span>
                 </button>
                 <button onclick="showTab('users')" id="users-tab"
-                    class="flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200">
-                    👥 Usuarios
+                    class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
+                    <span class="material-icons text-xl">people</span>
+                    <span>Usuarios</span>
                 </button>
                 <button onclick="showTab('coffees')" id="coffees-tab"
-                    class="flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200">
-                    ☕ Productos
+                    class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
+                    <span class="material-icons text-xl">inventory_2</span>
+                    <span>Productos</span>
                 </button>
             </div>
 
             <!-- Orders Section -->
-            <div id="orders-section" class="p-10">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div id="orders-section" class="p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
-                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Pedidos</h2>
-                        <p class="text-gray-600 mt-2 text-base">Administra todos los pedidos de la tienda</p>
+                        <h2 class="text-2xl font-semibold text-gray-900">Pedidos</h2>
+                        <p class="text-gray-600 mt-1 text-sm">Gestiona todos los pedidos de la tienda</p>
                     </div>
                     <select id="status-filter" onchange="loadOrders()"
-                        class="px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900 font-medium">
-                        <option value="all">📋 Todos</option>
-                        <option value="pending">⏳ Pendientes</option>
-                        <option value="processing">⚙️ En proceso</option>
-                        <option value="completed">✅ Completados</option>
-                        <option value="cancelled">❌ Cancelados</option>
+                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm">
+                        <option value="all">Todos los pedidos</option>
+                        <option value="pending">Pendientes</option>
+                        <option value="processing">En proceso</option>
+                        <option value="completed">Completados</option>
+                        <option value="cancelled">Cancelados</option>
                     </select>
                 </div>
-                <div id="orders-list" class="space-y-6"></div>
+                <div id="orders-list" class="space-y-4"></div>
             </div>
 
             <!-- Users Section -->
-            <div id="users-section" class="p-10 hidden">
-                <div class="flex justify-between items-center mb-8">
+            <div id="users-section" class="p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Usuarios</h2>
-                        <p id="users-count" class="text-gray-600 mt-2 text-base"></p>
+                        <h2 class="text-2xl font-semibold text-gray-900">Usuarios</h2>
+                        <p id="users-count" class="text-gray-600 mt-1 text-sm"></p>
                     </div>
+                    <button onclick="openCreateUserModal()"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 elevation-1 transition-colors">
+                        <span class="material-icons text-xl">add</span>
+                        <span>Nuevo Usuario</span>
+                    </button>
                 </div>
-                <div class="bg-white rounded-2xl overflow-hidden elevation-1">
-                    <table class="min-w-full">
-                        <thead class="bg-emerald-900">
+                <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Usuario</th>
-                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Email</th>
-                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Rol</th>
-                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Fecha</th>
-                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="users-list" class="divide-y divide-gray-200"></tbody>
+                        <tbody id="users-list" class="divide-y divide-gray-200 bg-white"></tbody>
                     </table>
                 </div>
             </div>
 
             <!-- Coffees Section -->
-            <div id="coffees-section" class="p-10 hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div id="coffees-section" class="p-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
-                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Productos</h2>
-                        <p id="coffees-count" class="text-gray-600 mt-2 text-base"></p>
+                        <h2 class="text-2xl font-semibold text-gray-900">Productos</h2>
+                        <p id="coffees-count" class="text-gray-600 mt-1 text-sm"></p>
                     </div>
                     <a href="/admin/register-coffee"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full transition-all duration-200 font-medium elevation-2 hover:elevation-3">
-                        + Nuevo Producto
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 elevation-1 transition-colors">
+                        <span class="material-icons text-xl">add</span>
+                        <span>Nuevo Producto</span>
                     </a>
                 </div>
-                <div id="coffees-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="coffees-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-emerald-950 text-emerald-100/60 text-center py-8 mt-16 elevation-2">
-        <p class="text-sm">© 2025 Onsen Coffee. Todos los derechos reservados.</p>
-    </footer>
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="bg-white rounded-lg elevation-3 p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Crear Usuario</h3>
+                <button onclick="closeCreateUserModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="createUserForm" onsubmit="createUser(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input type="text" name="first_name" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                    <input type="text" name="last_name" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" name="phone"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                    <select name="role"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <option value="user">Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeCreateUserModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+                        Crear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         function showTab(tab) {
@@ -150,10 +300,10 @@
 
                 if (section === tab) {
                     sectionEl.classList.remove('hidden');
-                    tabEl.className = 'flex-1 px-6 py-5 text-base font-medium text-emerald-900 transition-all duration-200 tab-active';
+                    tabEl.className = 'flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 tab-active transition-colors';
                 } else {
                     sectionEl.classList.add('hidden');
-                    tabEl.className = 'flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200';
+                    tabEl.className = 'flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors';
                 }
             });
 
@@ -172,53 +322,46 @@
 
             if (orders.length === 0) {
                 ordersList.innerHTML = `
-                    <div class="bg-white rounded-3xl text-center py-20 px-6 elevation-1">
-                        <div class="text-6xl mb-4">📦</div>
-                        <h3 class="text-xl font-medium text-gray-900 mb-3">No hay pedidos</h3>
-                        <p class="text-gray-500 text-base">Los pedidos aparecerán aquí cuando se realicen compras</p>
+                    <div class="bg-white rounded-lg text-center py-16 px-6 elevation-1">
+                        <span class="material-icons text-gray-300 text-6xl mb-4">shopping_cart</span>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No hay pedidos</h3>
+                        <p class="text-gray-500 text-sm">Los pedidos aparecerán aquí cuando se realicen compras</p>
                     </div>
                 `;
                 return;
             }
 
             orders.forEach(order => {
-                const statusColors = {
-                    pending: 'bg-yellow-100 text-yellow-800',
-                    processing: 'bg-blue-100 text-blue-800',
-                    completed: 'bg-green-100 text-green-800',
-                    cancelled: 'bg-red-100 text-red-800'
+                const statusConfig = {
+                    pending: { class: 'status-pending', text: 'Pendiente' },
+                    processing: { class: 'status-processing', text: 'En proceso' },
+                    completed: { class: 'status-completed', text: 'Completado' },
+                    cancelled: { class: 'status-cancelled', text: 'Cancelado' }
                 };
 
-                const statusText = {
-                    pending: '⏳ Pendiente',
-                    processing: '⚙️ En proceso',
-                    completed: '✅ Completado',
-                    cancelled: '❌ Cancelado'
-                };
+                const status = statusConfig[order.status] || statusConfig.pending;
 
                 ordersList.innerHTML += `
-                    <div class="bg-white rounded-3xl elevation-1 hover:elevation-3 transition-all duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg elevation-1 hover:elevation-2 transition-all overflow-hidden border border-gray-200">
                         <div class="p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 class="text-xl font-medium text-gray-900">${order.customerName}</h3>
-                                    <p class="text-sm text-gray-600 mt-1">${order.customerEmail}</p>
-                                    <p class="text-xs text-gray-500 mt-2">📅 ${new Date(order.createdAt).toLocaleString('es-ES')}</p>
+                                    <h3 class="text-lg font-semibold text-gray-900">${order.customer_name}</h3>
+                                    <p class="text-sm text-gray-600 mt-1">${order.customer_email}</p>
+                                    <p class="text-xs text-gray-500 mt-2">${new Date(order.created_at).toLocaleString('es-ES')}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-3xl font-normal text-emerald-600 mb-2">€${order.total.toFixed(2)}</p>
-                                    <span class="inline-block px-4 py-2 rounded-full text-xs font-medium ${statusColors[order.status]}">
-                                        ${statusText[order.status]}
-                                    </span>
+                                    <p class="text-2xl font-semibold text-emerald-600 mb-2">€${Number(order.total).toFixed(2)}</p>
+                                    <span class="status-badge ${status.class}">${status.text}</span>
                                 </div>
                             </div>
 
-                            <div class="bg-emerald-50 rounded-2xl p-5 mb-4">
-                                <h4 class="font-medium text-sm text-emerald-900 mb-3">📝 Items del pedido:</h4>
+                            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-medium text-sm text-gray-900 mb-3">Items del pedido</h4>
                                 <div class="space-y-2">
                                     ${order.items.map(item => `
                                         <div class="flex justify-between text-sm text-gray-700">
-                                            <span>☕ ${item.quantity}x ${item.name}</span>
+                                            <span>${item.quantity}x ${item.name}</span>
                                             <span class="font-medium">€${(item.price * item.quantity).toFixed(2)}</span>
                                         </div>
                                     `).join('')}
@@ -226,16 +369,17 @@
                             </div>
 
                             <div class="flex gap-3">
-                                <select onchange="updateOrderStatus('${order.id}', this.value)" 
-                                        class="flex-1 px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900 font-medium">
-                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pendiente</option>
-                                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>⚙️ En proceso</option>
-                                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Completado</option>
-                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelado</option>
+                                <select onchange="updateOrderStatus(${order.id}, this.value)" 
+                                        class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>En proceso</option>
+                                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completado</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
                                 </select>
-                                <button onclick="deleteOrder('${order.id}')" 
-                                        class="px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl transition-all duration-200 font-medium elevation-1 hover:elevation-2">
-                                    🗑️ Eliminar
+                                <button onclick="deleteOrder(${order.id})" 
+                                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                                    <span class="material-icons text-sm">delete</span>
+                                    <span>Eliminar</span>
                                 </button>
                             </div>
                         </div>
@@ -263,39 +407,41 @@
             const response = await fetch('/admin/api/users');
             const users = await response.json();
 
-            document.getElementById('users-count').textContent = `Total de usuarios: ${users.length}`;
+            document.getElementById('users-count').textContent = `${users.length} usuarios registrados`;
 
             const usersList = document.getElementById('users-list');
             usersList.innerHTML = '';
 
             if (users.length === 0) {
-                usersList.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-gray-500">No hay usuarios registrados</td></tr>';
+                usersList.innerHTML = '<tr><td colspan="5" class="text-center py-16 text-gray-500">No hay usuarios registrados</td></tr>';
                 return;
             }
 
             users.forEach(user => {
+                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Sin nombre';
                 usersList.innerHTML += `
-                    <tr class="hover:bg-emerald-50/30 transition-colors">
+                    <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
+                            <div class="text-sm font-medium text-gray-900">${fullName}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-600">${user.email}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <select onchange="updateUserRole('${user.id}', this.value)" 
-                                    class="px-4 py-2 bg-emerald-50/50 border-2 border-emerald-100 rounded-xl focus:ring-0 focus:border-emerald-500 transition-all text-sm font-medium">
-                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>👤 Usuario</option>
-                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
+                            <select onchange="updateUserRole(${user.id}, this.value)" 
+                                    class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>Usuario</option>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                             </select>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-600">${new Date(user.createdAt).toLocaleDateString('es-ES')}</div>
+                            <div class="text-sm text-gray-600">${new Date(user.created_at).toLocaleDateString('es-ES')}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <button onclick="deleteUser('${user.id}')" 
-                                    class="text-red-600 hover:text-red-800 font-medium text-sm transition-colors">
-                                🗑️ Eliminar
+                            <button onclick="deleteUser(${user.id})" 
+                                    class="text-red-600 hover:text-red-800 font-medium text-sm transition-colors flex items-center gap-1">
+                                <span class="material-icons text-sm">delete</span>
+                                <span>Eliminar</span>
                             </button>
                         </td>
                     </tr>
@@ -318,24 +464,57 @@
             loadUsers();
         }
 
+        function openCreateUserModal() {
+            document.getElementById('createUserModal').classList.add('active');
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById('createUserModal').classList.remove('active');
+            document.getElementById('createUserForm').reset();
+        }
+
+        async function createUser(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/admin/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeCreateUserModal();
+                    loadUsers();
+                } else {
+                    alert('Error al crear usuario');
+                }
+            } catch (error) {
+                alert('Error al crear usuario');
+            }
+        }
+
         async function loadCoffees() {
             const response = await fetch('/admin/api/coffees');
             const coffees = await response.json();
 
-            document.getElementById('coffees-count').textContent = `Total de productos: ${coffees.length}`;
+            document.getElementById('coffees-count').textContent = `${coffees.length} productos en catálogo`;
 
             const coffeesList = document.getElementById('coffees-list');
             coffeesList.innerHTML = '';
 
             if (coffees.length === 0) {
                 coffeesList.innerHTML = `
-                    <div class="col-span-full bg-white rounded-3xl text-center py-20 px-6 elevation-1">
-                        <div class="text-6xl mb-4">☕</div>
-                        <h3 class="text-xl font-medium text-gray-900 mb-3">No hay productos</h3>
-                        <p class="text-gray-500 mb-8 text-base">Comienza agregando tu primer producto al catálogo</p>
-                        <a href="/admin/register-coffee"
-                            class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-full transition-all duration-200 font-medium elevation-2 hover:elevation-3">
-                            + Registrar Producto
+                    <div class="col-span-full bg-white rounded-lg text-center py-16 px-6 elevation-1">
+                        <span class="material-icons text-gray-300 text-6xl mb-4">inventory_2</span>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No hay productos</h3>
+                        <p class="text-gray-500 mb-6 text-sm">Comienza agregando tu primer producto al catálogo</p>
+                        <a href="/admin/register-coffee" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg transition-colors">
+                            <span class="material-icons">add</span>
+                            <span>Registrar Producto</span>
                         </a>
                     </div>
                 `;
@@ -344,35 +523,32 @@
 
             coffees.forEach(product => {
                 coffeesList.innerHTML += `
-                    <div class="bg-white rounded-3xl overflow-hidden elevation-1 hover:elevation-3 transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="h-52 bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-50 flex items-center justify-center relative overflow-hidden">
+                    <div class="bg-white rounded-lg overflow-hidden elevation-1 hover:elevation-2 transition-all border border-gray-200">
+                        <div class="h-48 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center overflow-hidden">
                             ${product.image_url ?
                         `<img src="${product.image_url}" alt="${product.name}" class="h-full w-full object-cover">` :
-                        `<div class="text-emerald-200/40 text-8xl font-light">☕</div>`
+                        `<span class="material-icons text-gray-300 text-6xl">local_cafe</span>`
                     }
                         </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-3">
-                                <h3 class="text-xl font-medium text-gray-900">${product.name}</h3>
-                                <span class="${product.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'} text-xs px-3 py-1.5 rounded-full font-medium">
-                                    ${product.is_active ? '✓ Activo' : '✗ Inactivo'}
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">${product.name}</h3>
+                                <span class="${product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-1 rounded font-medium">
+                                    ${product.is_active ? 'Activo' : 'Inactivo'}
                                 </span>
                             </div>
-                            <p class="text-gray-500 text-sm mb-5">${product.origin}</p>
-                            <div class="flex flex-wrap gap-2 mb-5">
-                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">${product.roast}</span>
-                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">${product.weight_grams}g</span>
-                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">Stock: ${product.stock}</span>
-                            </div>
-                            <p class="text-3xl font-normal text-emerald-600 mb-6">€${product.price}</p>
-                            <div class="flex gap-3">
-                                <a href="/admin/update/${product.id}"
-                                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 px-4 rounded-full transition-all duration-200 font-medium elevation-1 hover:elevation-2">
-                                    ✏️ Editar
+                            <p class="text-gray-600 text-sm mb-3">${product.origin || 'Sin origen'}</p>
+                            <p class="text-2xl font-semibold text-emerald-600 mb-4">€${product.price}</p>
+                            <div class="flex gap-2">
+                                <a href="/admin/update-coffee/${product.id}"
+                                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-2 px-3 rounded-lg transition-colors text-sm flex items-center justify-center gap-1">
+                                    <span class="material-icons text-sm">edit</span>
+                                    <span>Editar</span>
                                 </a>
-                                <button onclick="deleteCoffee('${product.id}')"
-                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-full transition-all duration-200 font-medium elevation-1 hover:elevation-2">
-                                    🗑️ Eliminar
+                                <button onclick="deleteCoffee(${product.id})"
+                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg transition-colors text-sm flex items-center justify-center gap-1">
+                                    <span class="material-icons text-sm">delete</span>
+                                    <span>Eliminar</span>
                                 </button>
                             </div>
                         </div>
@@ -387,6 +563,7 @@
             loadCoffees();
         }
 
+        // Load initial data
         loadOrders();
     </script>
 </body>
