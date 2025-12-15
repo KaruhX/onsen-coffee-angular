@@ -49,3 +49,8 @@ pip-delete-this-directory.txt
 .ropeproject
 *.code-workspace
 .vercel
+# Admin specific
+admin/static/uploads/
+admin/__pycache__/
+admin/*.pyc
+admin/.env

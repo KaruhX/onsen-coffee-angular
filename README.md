@@ -214,6 +214,54 @@ Para producción, puedes configurar:
 - Verifica que las rutas en `vercel.json` estén correctas
 - Revisa los logs de Vercel para errores del backend
 
+# Onsen Coffee
+
+## Despliegue en Vercel
+
+### Configuración Inicial
+
+1. **Variables de Entorno en Vercel:**
+   ```
+   DATABASE_URL=tu_postgresql_url
+   SECRET_KEY=tu_clave_secreta
+   ```
+
+2. **Deploy:**
+   ```bash
+   vercel --prod
+   ```
+
+### Estructura del Proyecto
+
+```
+onsen-coffee/
+├── src/                    # Frontend Next.js
+├── admin/                  # Backend Flask Admin
+│   ├── app.py             # Aplicación Flask
+│   ├── templates/         # Templates HTML
+│   ├── requirements.txt   # Dependencias Python
+│   └── vercel.json       # Config Vercel Python
+├── prisma/               # Base de datos
+└── vercel.json          # Config principal Vercel
+```
+
+### Rutas Admin
+
+- `/admin` - Dashboard principal
+- `/admin/register-coffee` - Crear producto
+- `/admin/update/<id>` - Editar producto
+- `/admin/coffees` - Lista de productos
+- `/admin/api/*` - API endpoints
+
+### Características Admin
+
+✅ Gestión de Pedidos (CRUD)  
+✅ Gestión de Usuarios (CRUD)  
+✅ Gestión de Productos (CRUD)  
+✅ Dashboard con pestañas  
+✅ Diseño Material consistente  
+✅ Responsive design  
+
 ## 📄 Licencia
 
 MIT - Libre para usar y modificar

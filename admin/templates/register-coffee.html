@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Café | Onsen Coffee Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .material-surface {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.02) 100%);
+        }
+
+        .elevation-1 {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .elevation-2 {
+            box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .elevation-3 {
+            box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body class="material-surface min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-emerald-950 text-white elevation-2">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-medium tracking-tight">Onsen Coffee Admin</h1>
+                <div class="flex items-center gap-4">
+                    <a href="/admin"
+                        class="text-emerald-100 hover:bg-white/10 px-4 py-2 rounded-full transition-all duration-200 font-medium">
+                        🏠 Dashboard
+                    </a>
+                    <a href="/admin/coffees"
+                        class="text-emerald-100 hover:bg-white/10 px-4 py-2 rounded-full transition-all duration-200 font-medium">
+                        ← Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-6 py-12">
+        <div class="bg-white rounded-3xl elevation-2 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-emerald-900 px-10 py-10">
+                <h2 class="text-4xl font-normal text-white">☕ Registrar Nuevo Producto</h2>
+                <p class="text-emerald-100 mt-3 text-base">Complete los campos requeridos para agregar un producto al
+                    catálogo</p>
+            </div>
+
+            <!-- Form -->
+            <form action="/admin/save-new-coffee" method="post" enctype="multipart/form-data" class="p-10 space-y-8">
+                <!-- Row 1: Name & Origin -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Nombre del Café *
+                        </label>
+                        <input type="text" id="name" name="name" required
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                            placeholder="Ej: Etiopía Yirgacheffe">
+                    </div>
+                    <div>
+                        <label for="origin" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Origen *
+                        </label>
+                        <input type="text" id="origin" name="origin" required
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                            placeholder="Ej: Etiopía, Sidamo">
+                    </div>
+                </div>
+
+                <!-- Row 2: Roast & Process -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="roast" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Nivel de Tueste *
+                        </label>
+                        <select id="roast" name="roast" required
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900">
+                            <option value="">Seleccionar tueste...</option>
+                            <option value="claro">☕ Claro</option>
+                            <option value="medio">☕☕ Medio</option>
+                            <option value="oscuro">☕☕☕ Oscuro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="process" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Proceso *
+                        </label>
+                        <input type="text" id="process" name="process" required
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                            placeholder="Ej: Lavado, Natural, Honey">
+                    </div>
+                </div>
+
+                <!-- Row 3: Flavor Notes -->
+                <div>
+                    <label for="flavor_notes" class="block text-sm font-medium text-emerald-900 mb-3">
+                        Notas de Sabor *
+                    </label>
+                    <input type="text" id="flavor_notes" name="flavor_notes" required
+                        class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                        placeholder="Ej: Frutas rojas, chocolate, cítricos">
+                </div>
+
+                <!-- Row 4: Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-emerald-900 mb-3">
+                        Descripción *
+                    </label>
+                    <textarea id="description" name="description" rows="4" required
+                        class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 resize-none text-gray-900"
+                        placeholder="Describe las características únicas de este café..."></textarea>
+                </div>
+
+                <!-- Row 5: Price, Weight & Stock -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="price" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Precio (€) *
+                        </label>
+                        <div class="relative">
+                            <span
+                                class="absolute left-5 top-1/2 transform -translate-y-1/2 text-emerald-600 font-medium">€</span>
+                            <input type="number" id="price" name="price" step="0.01" min="0" required
+                                class="w-full pl-12 pr-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                                placeholder="12.99">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="weight_grams" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Peso (gramos) *
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="weight_grams" name="weight_grams" min="1" required
+                                class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                                placeholder="250">
+                            <span
+                                class="absolute right-5 top-1/2 transform -translate-y-1/2 text-emerald-600 font-medium">g</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="stock" class="block text-sm font-medium text-emerald-900 mb-3">
+                            Stock *
+                        </label>
+                        <input type="number" id="stock" name="stock" min="0" required
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                            placeholder="100">
+                    </div>
+                </div>
+
+                <!-- Row 6: Image Selection -->
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-emerald-900 mb-3">
+                        📷 Imagen del Producto
+                    </label>
+
+                    <!-- Image Gallery -->
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+                        {% for img in available_images %}
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="selected_image" value="{{ img.url }}" class="peer hidden" {% if
+                                loop.first %}checked{% endif %}>
+                            <div
+                                class="relative rounded-xl overflow-hidden elevation-1 peer-checked:ring-4 peer-checked:ring-emerald-500 transition-all duration-200 hover:elevation-2">
+                                <img src="{{ img.url }}" alt="{{ img.name }}" class="w-full h-20 object-cover">
+                                <div
+                                    class="absolute inset-0 bg-emerald-600/0 peer-checked:bg-emerald-600/20 transition-all">
+                                </div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label for="image_file" class="block text-xs font-medium text-gray-600 mb-2">
+                            O sube tu propia imagen
+                        </label>
+                        <input type="file" id="image_file" name="image_file" accept="image/*"
+                            class="w-full px-5 py-3 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200">
+                    </div>
+
+                    <!-- Manual URL Input -->
+                    <div>
+                        <label for="image_url" class="block text-xs font-medium text-gray-600 mb-2">
+                            O ingresa una URL externa
+                        </label>
+                        <input type="url" id="image_url" name="image_url"
+                            class="w-full px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900"
+                            placeholder="https://ejemplo.com/imagen-cafe.jpg">
+                    </div>
+                </div>
+
+                <!-- Row 7: Is Active -->
+                <div class="flex items-center space-x-4 p-5 bg-emerald-50 rounded-2xl border-2 border-emerald-100">
+                    <input type="checkbox" id="is_active" name="is_active" checked
+                        class="w-6 h-6 text-emerald-600 border-emerald-300 rounded-md focus:ring-emerald-500 cursor-pointer">
+                    <label for="is_active" class="text-sm font-medium text-emerald-900 cursor-pointer">
+                        ✓ Producto activo (visible en la tienda)
+                    </label>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-8">
+                    <button type="submit"
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-4 px-8 rounded-full transition-all duration-200 elevation-2 hover:elevation-3">
+                        ✅ Registrar Producto
+                    </button>
+                    <a href="/admin/coffees"
+                        class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium py-4 px-8 rounded-full transition-all duration-200 text-center border-2 border-emerald-200">
+                        ❌ Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-950 text-emerald-100/60 text-center py-8 mt-16 elevation-2">
+        <p class="text-sm">© 2025 Onsen Coffee. Todos los derechos reservados.</p>
+    </footer>
+</body>
+
+</html>

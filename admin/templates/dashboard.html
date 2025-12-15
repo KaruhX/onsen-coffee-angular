@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin | Onsen Coffee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .material-surface {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.02) 100%);
+        }
+
+        .elevation-1 {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .elevation-2 {
+            box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .elevation-3 {
+            box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-active {
+            background: rgba(16, 185, 129, 0.1);
+            border-bottom: 3px solid #10b981;
+        }
+    </style>
+</head>
+
+<body class="material-surface min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-emerald-950 text-white elevation-2">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-medium tracking-tight">Onsen Coffee Admin</h1>
+                <div class="flex items-center gap-4">
+                    <a href="/"
+                        class="text-emerald-100 hover:bg-white/10 px-4 py-2 rounded-full transition-all duration-200 font-medium">
+                        🏠 Ir a Tienda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Tabs -->
+        <div class="bg-white rounded-3xl elevation-2 overflow-hidden">
+            <div class="flex border-b-2 border-emerald-100">
+                <button onclick="showTab('orders')" id="orders-tab"
+                    class="flex-1 px-6 py-5 text-base font-medium text-emerald-900 transition-all duration-200 tab-active">
+                    📦 Pedidos
+                </button>
+                <button onclick="showTab('users')" id="users-tab"
+                    class="flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200">
+                    👥 Usuarios
+                </button>
+                <button onclick="showTab('coffees')" id="coffees-tab"
+                    class="flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200">
+                    ☕ Productos
+                </button>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="orders-section" class="p-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div>
+                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Pedidos</h2>
+                        <p class="text-gray-600 mt-2 text-base">Administra todos los pedidos de la tienda</p>
+                    </div>
+                    <select id="status-filter" onchange="loadOrders()"
+                        class="px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900 font-medium">
+                        <option value="all">📋 Todos</option>
+                        <option value="pending">⏳ Pendientes</option>
+                        <option value="processing">⚙️ En proceso</option>
+                        <option value="completed">✅ Completados</option>
+                        <option value="cancelled">❌ Cancelados</option>
+                    </select>
+                </div>
+                <div id="orders-list" class="space-y-6"></div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="p-10 hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Usuarios</h2>
+                        <p id="users-count" class="text-gray-600 mt-2 text-base"></p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden elevation-1">
+                    <table class="min-w-full">
+                        <thead class="bg-emerald-900">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                    Usuario</th>
+                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                    Email</th>
+                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                    Rol</th>
+                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                    Fecha</th>
+                                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wide">
+                                    Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Coffees Section -->
+            <div id="coffees-section" class="p-10 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div>
+                        <h2 class="text-4xl font-normal text-gray-900">Gestión de Productos</h2>
+                        <p id="coffees-count" class="text-gray-600 mt-2 text-base"></p>
+                    </div>
+                    <a href="/admin/register-coffee"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full transition-all duration-200 font-medium elevation-2 hover:elevation-3">
+                        + Nuevo Producto
+                    </a>
+                </div>
+                <div id="coffees-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-950 text-emerald-100/60 text-center py-8 mt-16 elevation-2">
+        <p class="text-sm">© 2025 Onsen Coffee. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function showTab(tab) {
+            const sections = ['orders', 'users', 'coffees'];
+            sections.forEach(section => {
+                const sectionEl = document.getElementById(`${section}-section`);
+                const tabEl = document.getElementById(`${section}-tab`);
+
+                if (section === tab) {
+                    sectionEl.classList.remove('hidden');
+                    tabEl.className = 'flex-1 px-6 py-5 text-base font-medium text-emerald-900 transition-all duration-200 tab-active';
+                } else {
+                    sectionEl.classList.add('hidden');
+                    tabEl.className = 'flex-1 px-6 py-5 text-base font-medium text-gray-600 hover:bg-emerald-50/50 transition-all duration-200';
+                }
+            });
+
+            if (tab === 'orders') loadOrders();
+            if (tab === 'users') loadUsers();
+            if (tab === 'coffees') loadCoffees();
+        }
+
+        async function loadOrders() {
+            const filter = document.getElementById('status-filter').value;
+            const response = await fetch(`/admin/api/orders?status=${filter}`);
+            const orders = await response.json();
+
+            const ordersList = document.getElementById('orders-list');
+            ordersList.innerHTML = '';
+
+            if (orders.length === 0) {
+                ordersList.innerHTML = `
+                    <div class="bg-white rounded-3xl text-center py-20 px-6 elevation-1">
+                        <div class="text-6xl mb-4">📦</div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">No hay pedidos</h3>
+                        <p class="text-gray-500 text-base">Los pedidos aparecerán aquí cuando se realicen compras</p>
+                    </div>
+                `;
+                return;
+            }
+
+            orders.forEach(order => {
+                const statusColors = {
+                    pending: 'bg-yellow-100 text-yellow-800',
+                    processing: 'bg-blue-100 text-blue-800',
+                    completed: 'bg-green-100 text-green-800',
+                    cancelled: 'bg-red-100 text-red-800'
+                };
+
+                const statusText = {
+                    pending: '⏳ Pendiente',
+                    processing: '⚙️ En proceso',
+                    completed: '✅ Completado',
+                    cancelled: '❌ Cancelado'
+                };
+
+                ordersList.innerHTML += `
+                    <div class="bg-white rounded-3xl elevation-1 hover:elevation-3 transition-all duration-300 overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-medium text-gray-900">${order.customerName}</h3>
+                                    <p class="text-sm text-gray-600 mt-1">${order.customerEmail}</p>
+                                    <p class="text-xs text-gray-500 mt-2">📅 ${new Date(order.createdAt).toLocaleString('es-ES')}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-3xl font-normal text-emerald-600 mb-2">€${order.total.toFixed(2)}</p>
+                                    <span class="inline-block px-4 py-2 rounded-full text-xs font-medium ${statusColors[order.status]}">
+                                        ${statusText[order.status]}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="bg-emerald-50 rounded-2xl p-5 mb-4">
+                                <h4 class="font-medium text-sm text-emerald-900 mb-3">📝 Items del pedido:</h4>
+                                <div class="space-y-2">
+                                    ${order.items.map(item => `
+                                        <div class="flex justify-between text-sm text-gray-700">
+                                            <span>☕ ${item.quantity}x ${item.name}</span>
+                                            <span class="font-medium">€${(item.price * item.quantity).toFixed(2)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <select onchange="updateOrderStatus('${order.id}', this.value)" 
+                                        class="flex-1 px-5 py-4 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl focus:ring-0 focus:border-emerald-500 transition-all duration-200 text-gray-900 font-medium">
+                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pendiente</option>
+                                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>⚙️ En proceso</option>
+                                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Completado</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelado</option>
+                                </select>
+                                <button onclick="deleteOrder('${order.id}')" 
+                                        class="px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl transition-all duration-200 font-medium elevation-1 hover:elevation-2">
+                                    🗑️ Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            await fetch(`/admin/api/orders/${orderId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            loadOrders();
+        }
+
+        async function deleteOrder(orderId) {
+            if (!confirm('¿Estás seguro de eliminar este pedido?')) return;
+            await fetch(`/admin/api/orders/${orderId}`, { method: 'DELETE' });
+            loadOrders();
+        }
+
+        async function loadUsers() {
+            const response = await fetch('/admin/api/users');
+            const users = await response.json();
+
+            document.getElementById('users-count').textContent = `Total de usuarios: ${users.length}`;
+
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+
+            if (users.length === 0) {
+                usersList.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-gray-500">No hay usuarios registrados</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                usersList.innerHTML += `
+                    <tr class="hover:bg-emerald-50/30 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-600">${user.email}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <select onchange="updateUserRole('${user.id}', this.value)" 
+                                    class="px-4 py-2 bg-emerald-50/50 border-2 border-emerald-100 rounded-xl focus:ring-0 focus:border-emerald-500 transition-all text-sm font-medium">
+                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>👤 Usuario</option>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-600">${new Date(user.createdAt).toLocaleDateString('es-ES')}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="deleteUser('${user.id}')" 
+                                    class="text-red-600 hover:text-red-800 font-medium text-sm transition-colors">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function updateUserRole(userId, role) {
+            await fetch(`/admin/api/users/${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role })
+            });
+            loadUsers();
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+            await fetch(`/admin/api/users/${userId}`, { method: 'DELETE' });
+            loadUsers();
+        }
+
+        async function loadCoffees() {
+            const response = await fetch('/admin/api/coffees');
+            const coffees = await response.json();
+
+            document.getElementById('coffees-count').textContent = `Total de productos: ${coffees.length}`;
+
+            const coffeesList = document.getElementById('coffees-list');
+            coffeesList.innerHTML = '';
+
+            if (coffees.length === 0) {
+                coffeesList.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl text-center py-20 px-6 elevation-1">
+                        <div class="text-6xl mb-4">☕</div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">No hay productos</h3>
+                        <p class="text-gray-500 mb-8 text-base">Comienza agregando tu primer producto al catálogo</p>
+                        <a href="/admin/register-coffee"
+                            class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-full transition-all duration-200 font-medium elevation-2 hover:elevation-3">
+                            + Registrar Producto
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            coffees.forEach(product => {
+                coffeesList.innerHTML += `
+                    <div class="bg-white rounded-3xl overflow-hidden elevation-1 hover:elevation-3 transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="h-52 bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-50 flex items-center justify-center relative overflow-hidden">
+                            ${product.image_url ?
+                        `<img src="${product.image_url}" alt="${product.name}" class="h-full w-full object-cover">` :
+                        `<div class="text-emerald-200/40 text-8xl font-light">☕</div>`
+                    }
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-xl font-medium text-gray-900">${product.name}</h3>
+                                <span class="${product.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'} text-xs px-3 py-1.5 rounded-full font-medium">
+                                    ${product.is_active ? '✓ Activo' : '✗ Inactivo'}
+                                </span>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-5">${product.origin}</p>
+                            <div class="flex flex-wrap gap-2 mb-5">
+                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">${product.roast}</span>
+                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">${product.weight_grams}g</span>
+                                <span class="bg-emerald-50 text-emerald-700 text-xs px-4 py-1.5 rounded-full font-medium">Stock: ${product.stock}</span>
+                            </div>
+                            <p class="text-3xl font-normal text-emerald-600 mb-6">€${product.price}</p>
+                            <div class="flex gap-3">
+                                <a href="/admin/update/${product.id}"
+                                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 px-4 rounded-full transition-all duration-200 font-medium elevation-1 hover:elevation-2">
+                                    ✏️ Editar
+                                </a>
+                                <button onclick="deleteCoffee('${product.id}')"
+                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-full transition-all duration-200 font-medium elevation-1 hover:elevation-2">
+                                    🗑️ Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteCoffee(coffeeId) {
+            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+            await fetch(`/admin/api/coffees/${coffeeId}`, { method: 'DELETE' });
+            loadCoffees();
+        }
+
+        loadOrders();
+    </script>
+</body>
+
+</html>
