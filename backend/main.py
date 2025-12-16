@@ -4,6 +4,13 @@ import os
 import sys
 from pathlib import Path
 
+# Cargar variables de entorno (solo en desarrollo)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    pass
+
 # Agregar el directorio backend al path
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))

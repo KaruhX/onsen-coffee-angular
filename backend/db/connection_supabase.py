@@ -5,10 +5,13 @@ Base de datos PostgreSQL serverless con toda la potencia de Supabase
 
 import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
 
-# Cargar variables de entorno
-load_dotenv()
+# Cargar variables de entorno (solo en desarrollo local)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    pass  # En producción (Vercel) las variables vienen del dashboard
 
 # Configuración de Supabase
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
