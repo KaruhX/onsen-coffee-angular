@@ -288,18 +288,17 @@
 
                     <!-- Cart Items -->
                     <div class="space-y-4 mb-6 max-h-64 overflow-y-auto">
-                        @for (item of cart(); track item.coffeeId) {
+                        @for (item of cart(); track item.id) {
                         <div class="flex gap-4">
                             <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                                @if (item.coffee?.image_url) {
-                                <img [src]="item.coffee?.image_url" [alt]="item.coffee?.name"
-                                    class="w-full h-full object-cover">
+                                @if (item.image_url) {
+                                <img [src]="item.image_url" [alt]="item.name" class="w-full h-full object-cover">
                                 }
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 truncate">{{ item.coffee?.name }}</p>
+                                <p class="font-medium text-gray-900 truncate">{{ item.name }}</p>
                                 <p class="text-sm text-gray-500">Cantidad: {{ item.quantity }}</p>
-                                <p class="text-sm font-medium text-emerald-600">{{ (item.coffee?.price || 0) *
+                                <p class="text-sm font-medium text-emerald-600">{{ item.price *
                                     item.quantity | currency:'EUR':'symbol':'1.2-2' }}</p>
                             </div>
                         </div>

@@ -1,27 +1,88 @@
 from flask import Blueprint, jsonify, session, request
+import sys
+from pathlib import Path
+
+# Agregar backend al path
+backend_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(backend_dir))
+
 import repository.store_repo as repo
 
 api = Blueprint('api', __name__)
 
 def register_routes(app):
-    # Register blueprint at /api for all routes
     app.register_blueprint(api, url_prefix='/api')
 
 @api.route("/")
 def init_rest():
-    return "Rest Services OK"
+    return jsonify({"status": "ok", "message": "Onsen Coffee API - Supabase Edition"})
+
+# ============ PRODUCTS ENDPOINTS ============
 
 @api.route("/coffees")
 def obtainCoffees():
     return jsonify(repo.obtainCoffees())
 
-@api.route("/users")
-def obtainUsers():
-    return jsonify(repo.obtainUsers())
-
 @api.route("/coffees/<int:coffee_id>")
 def obtainCoffeeById(coffee_id):
     return jsonify(repo.obtainCoffeeById(coffee_id))
+
+@api.route("/products/search", methods=["GET"])
+def searchProducts():
+    try:
+        query = request.args.get('q')
+        category = request.args.get('category')
+        roast = request.args.get('roast')
+        min_price = request.args.get('min_price', type=float)
+        max_price = request.args.get('max_price', type=float)
+        featured = request.args.get('featured', type=lambda x: x.lower() == 'true')
+        is_new = request.args.get('new', type=lambda x: x.lower() == 'true')
+        
+        products = repo.searchProducts(
+            query=query,
+            category=category,
+            roast=roast,
+            min_price=min_price,
+            max_price=max_price,
+            featured=featured,
+            is_new=is_new
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": products,
+            "count": len(products)
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/products/slug/<slug>")
+def getProductBySlug(slug):
+    try:
+        product = repo.getProductBySlug(slug)
+        if not product:
+            return jsonify({"success": False, "error": "Producto no encontrado"}), 404
+        return jsonify({"success": True, "data": product})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/products/featured")
+def getFeaturedProducts():
+    try:
+        products = repo.searchProducts(featured=True)
+        return jsonify({"success": True, "data": products})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/products/new")
+def getNewProducts():
+    try:
+        products = repo.searchProducts(is_new=True)
+        return jsonify({"success": True, "data": products})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ============ CART ENDPOINTS ============
 
 @api.route("/cart", methods=["GET"])
 def getCart():
@@ -30,7 +91,6 @@ def getCart():
         cart = []
         session['cart'] = cart
     return jsonify(cart)
-
 
 @api.route("/cart", methods=["POST"])
 def addToCart():
@@ -92,8 +152,6 @@ def clearCart():
 def createOrder():
     try:
         data = request.get_json()
-        
-        # Validar campos requeridos
         required_fields = ['customer_name', 'customer_email', 'shipping_address', 'items']
         for field in required_fields:
             if not data.get(field):
@@ -103,10 +161,7 @@ def createOrder():
             return jsonify({"error": "El carrito está vacío"}), 400
         
         result = repo.registerOrder(data)
-        
-        # Limpiar carrito después de crear pedido
         session['cart'] = []
-        
         return jsonify(result)
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400
@@ -138,7 +193,105 @@ def updateOrderStatus(order_id):
     
     valid_statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
     if status not in valid_statuses:
-        return jsonify({"error": f"Estado no válido. Usa: {', '.join(valid_statuses)}"}), 400
+        return jsonify({"error": f"Estado no válido"}), 400
     
     result = repo.updateOrderStatus(order_id, status, tracking_number)
     return jsonify(result)
+
+# ============ CONTACT MESSAGES ============
+
+@api.route("/contact", methods=["POST"])
+def createContactMessage():
+    try:
+        data = request.get_json()
+        required_fields = ['name', 'email', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"success": False, "error": f"El campo {field} es requerido"}), 400
+        
+        result = repo.createContactMessage(data)
+        return jsonify({
+            "success": True,
+            "message": "Mensaje enviado correctamente. Te responderemos pronto.",
+            "data": result
+        }), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/contact", methods=["GET"])
+def getAllContactMessages():
+    try:
+        status = request.args.get('status')
+        messages = repo.getAllContactMessages(status)
+        return jsonify({"success": True, "data": messages})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/contact/<int:message_id>")
+def getContactMessage(message_id):
+    try:
+        message = repo.getContactMessageById(message_id)
+        if not message:
+            return jsonify({"success": False, "error": "Mensaje no encontrado"}), 404
+        return jsonify({"success": True, "data": message})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/contact/<int:message_id>/status", methods=["PUT"])
+def updateContactMessageStatus(message_id):
+    try:
+        data = request.get_json()
+        status = data.get('status')
+        valid_statuses = ['new', 'read', 'replied', 'archived']
+        if status not in valid_statuses:
+            return jsonify({"success": False, "error": "Estado no válido"}), 400
+        
+        result = repo.updateContactMessageStatus(message_id, status)
+        if not result:
+            return jsonify({"success": False, "error": "Mensaje no encontrado"}), 404
+        
+        return jsonify({"success": True, "message": "Estado actualizado", "data": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ============ REVIEWS ============
+
+@api.route("/products/<int:product_id>/reviews", methods=["GET"])
+def getProductReviews(product_id):
+    try:
+        reviews = repo.getProductReviews(product_id)
+        return jsonify({"success": True, "data": reviews})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api.route("/products/<int:product_id>/reviews", methods=["POST"])
+def createProductReview(product_id):
+    try:
+        data = request.get_json()
+        data['product_id'] = product_id
+        required_fields = ['name', 'rating', 'comment']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"success": False, "error": f"El campo {field} es requerido"}), 400
+        
+        try:
+            rating = int(data.get('rating'))
+            if rating < 1 or rating > 5:
+                raise ValueError()
+        except:
+            return jsonify({"success": False, "error": "El rating debe ser un número entre 1 y 5"}), 400
+        
+        result = repo.createProductReview(data)
+        if 'error' in result:
+            return jsonify({"success": False, "error": result['error']}), 400
+        
+        return jsonify({"success": True, "message": "Review creada exitosamente", "data": result}), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ============ USERS ============
+
+@api.route("/users")
+def obtainUsers():
+    return jsonify(repo.obtainUsers())
+

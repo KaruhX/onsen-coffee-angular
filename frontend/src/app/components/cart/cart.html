@@ -16,14 +16,13 @@
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
             <!-- Cart Items -->
             <div class="divide-y divide-gray-100">
-                @for (item of cart(); track item.coffeeId) {
+                @for (item of cart(); track item.id) {
                 <div class="flex items-center gap-6 p-6 hover:bg-gray-50 transition-colors">
                     <!-- Image -->
                     <div
                         class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex-shrink-0 overflow-hidden">
-                        @if(item.coffee?.image_url) {
-                        <img [src]="item.coffee?.image_url" [alt]="item.coffee?.name"
-                            class="w-full h-full object-cover">
+                        @if(item.image_url) {
+                        <img [src]="item.image_url" [alt]="item.name" class="w-full h-full object-cover">
                         } @else {
                         <div
                             class="w-full h-full flex items-center justify-center text-emerald-300 text-2xl font-light">
@@ -33,22 +32,22 @@
 
                     <!-- Info -->
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-medium text-gray-900 text-lg">{{ item.coffee?.name }}</h3>
+                        <h3 class="font-medium text-gray-900 text-lg">{{ item.name }}</h3>
                         <p class="text-gray-500 text-sm flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             </svg>
-                            {{ item.coffee?.origin }}
+                            {{ item.origin }}
                         </p>
-                        <p class="text-emerald-600 font-medium mt-1">{{ item.coffee?.price | currency:'EUR' }}</p>
+                        <p class="text-emerald-600 font-medium mt-1">{{ item.price | currency:'EUR' }}</p>
                     </div>
 
                     <!-- Quantity -->
                     <div class="flex items-center gap-1 bg-gray-100 rounded-full p-1">
                         <button
                             class="w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-emerald-50 transition-colors shadow-sm text-gray-700"
-                            (click)="updateQuantity(item.coffeeId, item.quantity - 1)">
+                            (click)="updateQuantity(item.id, item.quantity - 1)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                             </svg>
@@ -56,7 +55,7 @@
                         <span class="w-12 text-center font-medium text-gray-900">{{ item.quantity }}</span>
                         <button
                             class="w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-emerald-50 transition-colors shadow-sm text-gray-700"
-                            (click)="updateQuantity(item.coffeeId, item.quantity + 1)">
+                            (click)="updateQuantity(item.id, item.quantity + 1)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4" />
@@ -66,14 +65,14 @@
 
                     <!-- Subtotal -->
                     <div class="text-right min-w-[100px]">
-                        <span class="text-xl font-medium text-gray-900">{{ (item.coffee?.price || 0) * item.quantity |
+                        <span class="text-xl font-medium text-gray-900">{{ item.price * item.quantity |
                             currency:'EUR' }}</span>
                     </div>
 
                     <!-- Remove -->
                     <button
                         class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                        (click)="removeItem(item.coffeeId)">
+                        (click)="removeItem(item.id)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

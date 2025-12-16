@@ -1,38 +1,31 @@
 # -*- coding: utf-8 -*-
 """
 Schema de Base de Datos para Onsen Coffee - E-commerce de Café de Especialidad
+Usando Supabase (PostgreSQL)
 """
 
-import os
-import sqlite3
-import tempfile
-
-# Ruta en /tmp para funcionar en entornos serverless de solo lectura
-DB_PATH = os.path.join(tempfile.gettempdir(), 'onsen-coffee.db')
+from .connection_supabase import get_db_connection
 
 def get_connection():
-    """Obtiene conexión a la base de datos"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    """Obtiene conexión a la base de datos de Supabase"""
+    return get_db_connection()
 
 def create_tables():
-    """Crea las 6 tablas principales del e-commerce"""
+    """Crea las 6 tablas principales del e-commerce en PostgreSQL/Supabase"""
     conn = get_connection()
     cursor = conn.cursor()
     
     # 1. USUARIOS
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             first_name VARCHAR(100) NOT NULL,
             last_name VARCHAR(100) NOT NULL,
             phone VARCHAR(20),
             role VARCHAR(20) DEFAULT 'customer' CHECK(role IN ('customer', 'admin')),
-            is_active BOOLEAN DEFAULT 1,
+            is_active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -40,18 +33,27 @@ def create_tables():
     # 2. PRODUCTOS (Cafés)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
+            slug VARCHAR(255) UNIQUE NOT NULL,
+            description TEXT,
+            short_description TEXT,
             origin VARCHAR(100),
             roast VARCHAR(50) CHECK(roast IN ('claro', 'medio', 'oscuro')),
             process VARCHAR(50),
+            altitude VARCHAR(50),
             flavor_notes TEXT,
-            description TEXT,
             price DECIMAL(10,2) NOT NULL,
+            old_price DECIMAL(10,2),
             weight_grams INTEGER DEFAULT 250,
             stock INTEGER DEFAULT 0,
+            category VARCHAR(50) DEFAULT 'coffee',
             image_url TEXT,
-            is_active BOOLEAN DEFAULT 1,
+            featured BOOLEAN DEFAULT FALSE,
+            is_new BOOLEAN DEFAULT FALSE,
+            rating DECIMAL(3,2) DEFAULT 0.0,
+            reviews_count INTEGER DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -59,8 +61,8 @@ def create_tables():
     # 3. PEDIDOS
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
             status VARCHAR(30) DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')),
             subtotal DECIMAL(10,2) NOT NULL,
             shipping_cost DECIMAL(10,2) DEFAULT 4.99,
@@ -78,27 +80,54 @@ def create_tables():
             notes TEXT,
             estimated_delivery DATE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
     # 4. ITEMS DEL PEDIDO
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER NOT NULL,
-            product_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+            product_id INTEGER NOT NULL REFERENCES products(id),
             quantity INTEGER NOT NULL,
-            unit_price DECIMAL(10,2) NOT NULL,
-            FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-            FOREIGN KEY (product_id) REFERENCES products(id)
+            unit_price DECIMAL(10,2) NOT NULL
+        )
+    ''')
+    
+    # 5. MENSAJES DE CONTACTO
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS contact_messages (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(200) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            subject VARCHAR(300) NOT NULL,
+            message TEXT NOT NULL,
+            status VARCHAR(20) DEFAULT 'new' CHECK(status IN ('new', 'read', 'replied', 'archived')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # 6. REVIEWS DE PRODUCTOS
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS product_reviews (
+            id SERIAL PRIMARY KEY,
+            product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            name VARCHAR(200) NOT NULL,
+            rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+            comment TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
     # Índices
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_contact_status ON contact_messages(status)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_reviews_product ON product_reviews(product_id)')
     
     conn.commit()
     conn.close()
@@ -118,40 +147,116 @@ def insert_seed_data():
         ('pedro@example.com', 'hashed_pass321', 'Pedro', 'Sánchez', '5557894561', 'customer')
     ]
     
-    cursor.executemany('''
-        INSERT OR IGNORE INTO users (email, password_hash, first_name, last_name, phone, role)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', users)
+    for user in users:
+        cursor.execute('''
+            INSERT INTO users (email, password_hash, first_name, last_name, phone, role)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (email) DO NOTHING
+        ''', user)
     
-    # Productos de ejemplo
+    # Productos de ejemplo con nuevos campos
     products = [
-        ('Ethiopian Yirgacheffe', 'Etiopía', 'medio', 'Lavado', 'Floral, cítrico, bergamota', 'Café de especialidad con notas brillantes', 32.99, 250, 50, 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80'),
-        ('Colombian Geisha', 'Colombia', 'claro', 'Honey', 'Jazmín, durazno, miel', 'Geisha excepcional de finca de altura', 45.00, 250, 30, 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80'),
-        ('Kenyan AA', 'Kenia', 'medio', 'Lavado', 'Grosella, tomate, vino', 'Acidez vibrante y compleja', 38.50, 250, 40, 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80'),
-        ('Sumatra Mandheling', 'Indonesia', 'oscuro', 'Wet-hulled', 'Chocolate, terroso, especias', 'Cuerpo intenso y notas profundas', 34.99, 250, 45, 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80'),
-        ('Costa Rica Tarrazú', 'Costa Rica', 'medio', 'Lavado', 'Manzana verde, caramelo, nuez', 'Balance perfecto y dulzura natural', 36.00, 250, 35, 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80'),
-        ('Guatemala Antigua', 'Guatemala', 'medio', 'Lavado', 'Chocolate, nuez, cítrico', 'Cuerpo completo con final dulce', 33.50, 250, 60, 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80'),
-        ('Brazil Santos', 'Brasil', 'oscuro', 'Natural', 'Nuez, chocolate, bajo en acidez', 'Suave y equilibrado para espresso', 30.00, 250, 80, 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80'),
-        ('Panama Geisha', 'Panamá', 'claro', 'Lavado', 'Jazmín, bergamota, tropical', 'El café más exclusivo del mundo', 49.99, 250, 15, 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80')
+        ('Ethiopian Yirgacheffe', 'ethiopian-yirgacheffe', 'Café de especialidad con notas brillantes y cuerpo ligero', 'Notas florales y cítricas', 'Etiopía', 'medio', 'Lavado', '1800-2000m', 'Floral, cítrico, bergamota, té negro', 32.99, None, 250, 50, 'coffee', 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80', True, False, 4.5, 28),
+        ('Colombian Geisha', 'colombian-geisha', 'Geisha excepcional de finca de altura con perfil único', 'Variedad Geisha premium', 'Colombia', 'claro', 'Honey', '1600-1900m', 'Jazmín, durazno, miel, floral', 45.00, 52.00, 250, 30, 'coffee', 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80', True, True, 4.8, 42),
+        ('Kenyan AA', 'kenyan-aa', 'Acidez vibrante y compleja con notas frutales intensas', 'Grado AA de Kenia', 'Kenia', 'medio', 'Lavado', '1500-2100m', 'Grosella, tomate, vino tinto, cítricos', 38.50, None, 250, 40, 'coffee', 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80', True, False, 4.6, 35),
+        ('Sumatra Mandheling', 'sumatra-mandheling', 'Cuerpo intenso y notas profundas con baja acidez', 'Proceso húmedo descascarado', 'Indonesia', 'oscuro', 'Wet-hulled', '1100-1500m', 'Chocolate oscuro, terroso, especias, hierbas', 34.99, None, 250, 45, 'coffee', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80', False, False, 4.3, 22),
+        ('Costa Rica Tarrazú', 'costa-rica-tarrazu', 'Balance perfecto y dulzura natural del Valle Central', 'Región Tarrazú premium', 'Costa Rica', 'medio', 'Lavado', '1200-1700m', 'Manzana verde, caramelo, nuez, miel', 36.00, None, 250, 35, 'coffee', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80', False, True, 4.4, 19),
+        ('Guatemala Antigua', 'guatemala-antigua', 'Cuerpo completo con final dulce y notas achocolatadas', 'Antigua clásico', 'Guatemala', 'medio', 'Lavado', '1500-1800m', 'Chocolate con leche, nuez, cítrico suave', 33.50, None, 250, 60, 'coffee', 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80', False, False, 4.2, 31),
+        ('Brazil Santos', 'brazil-santos', 'Suave y equilibrado, ideal para espresso', 'Proceso natural brasileño', 'Brasil', 'oscuro', 'Natural', '900-1200m', 'Nuez, chocolate, caramelo, baja acidez', 30.00, 34.00, 250, 80, 'coffee', 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80', False, False, 4.1, 45),
+        ('Panama Geisha', 'panama-geisha', 'El café más exclusivo del mundo con perfil excepcional', 'Geisha de Panamá', 'Panamá', 'claro', 'Lavado', '1600-2000m', 'Jazmín, bergamota, tropical, mango', 49.99, None, 250, 15, 'coffee', 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80', True, True, 4.9, 67)
     ]
     
-    cursor.executemany('''
-        INSERT OR IGNORE INTO products (name, origin, roast, process, flavor_notes, description, price, weight_grams, stock, image_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', products)
+    for product in products:
+        cursor.execute('''
+            INSERT INTO products (name, slug, description, short_description, origin, roast, process, altitude, 
+                                flavor_notes, price, old_price, weight_grams, stock, category, image_url, 
+                                featured, is_new, rating, reviews_count)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (slug) DO NOTHING
+        ''', product)
     
-    # Pedidos de ejemplo
-    orders = [
-        (2, 'delivered', 599.00, 99.00, 698.00, 'Av. Reforma 123, CDMX, CP 06600'),
-        (2, 'shipped', 450.00, 99.00, 549.00, 'Av. Reforma 123, CDMX, CP 06600'),
-        (3, 'paid', 920.00, 0.00, 920.00, 'Calle Juárez 456, Guadalajara, CP 44100'),
-        (4, 'pending', 285.00, 99.00, 384.00, 'Blvd. Independencia 789, Monterrey, CP 64000'),
-        (5, 'delivered', 1780.00, 0.00, 1780.00, 'Calle 5 de Mayo 321, Puebla, CP 72000'),
-        (3, 'cancelled', 320.00, 99.00, 419.00, 'Calle Juárez 456, Guadalajara, CP 44100')
-    ]
+    # Pedidos de ejemplo para testing (siempre se crean en cada despliegue)
+    # Limpiamos pedidos anteriores para evitar duplicados
+    cursor.execute('DELETE FROM order_items')
+    cursor.execute('DELETE FROM orders')
     
-    # No insertamos órdenes de ejemplo, solo clientes y productos
-    # Los pedidos se crean a través del flujo de checkout
+    # Pedido 1: María - 2x Ethiopian Yirgacheffe
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'pending', 65.98, 4.99, 70.97, 'María García', 'maria@gmail.com', 
+                '+34 611 222 333', 'Avenida Principal 45', 'Barcelona', '08001', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 1, 2, 32.99)', (order_id,))
+    
+    # Pedido 2: Carlos - 3x Colombian Geisha + 1x Kenyan AA
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'processing', 173.50, 4.99, 178.49, 'Carlos Ruiz', 'carlos@outlook.com',
+                '+34 622 333 444', 'Plaza Mayor 12', 'Valencia', '46001', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 2, 3, 45.00)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 3, 1, 38.50)', (order_id,))
+    
+    # Pedido 3: Ana - 1x Ethiopian Yirgacheffe
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'delivered', 32.99, 4.99, 37.98, 'Ana Martínez', 'ana@yahoo.com',
+                '+34 633 444 555', 'Calle Sol 78', 'Sevilla', '41001', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 1, 1, 32.99)', (order_id,))
+    
+    # Pedido 4: Juan - Colombian Geisha + Costa Rica + Sumatra
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'pending', 115.99, 4.99, 120.98, 'Juan Pérez', 'juan@test.com',
+                '+34 644 555 666', 'Gran Vía 234', 'Madrid', '28001', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 2, 1, 45.00)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 5, 1, 36.00)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 4, 1, 34.99)', (order_id,))
+    
+    # Pedido 5: Laura - Mix de cafés
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'shipped', 142.48, 0.00, 142.48, 'Laura Fernández', 'laura@example.com',
+                '+34 655 777 888', 'Paseo de Gracia 89', 'Barcelona', '08007', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 3, 2, 38.50)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 6, 2, 33.50)', (order_id,))
+    
+    # Pedido 6: Miguel - Pedido grande
+    cursor.execute('''
+        INSERT INTO orders (user_id, status, subtotal, shipping_cost, total, customer_name, 
+                           customer_email, customer_phone, shipping_address, shipping_city,
+                           shipping_postal_code, shipping_country)
+        VALUES (NULL, 'delivered', 269.94, 0.00, 269.94, 'Miguel Torres', 'miguel@company.com',
+                '+34 666 888 999', 'Calle Mayor 156', 'Málaga', '29015', 'España')
+        RETURNING id
+    ''')
+    order_id = cursor.fetchone()['id']
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 1, 3, 32.99)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 4, 2, 34.99)', (order_id,))
+    cursor.execute('INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (%s, 7, 3, 30.00)', (order_id,))
     
     conn.commit()
     conn.close()

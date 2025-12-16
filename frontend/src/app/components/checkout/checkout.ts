@@ -67,9 +67,9 @@ export class Checkout implements OnInit {
     const checkoutData = {
       ...this.checkoutForm.value,
       items: this.cart().map((item) => ({
-        product_id: item.coffeeId,
+        product_id: item.id,
         quantity: item.quantity,
-        price: item.coffee?.price || 0,
+        price: item.price,
       })),
     };
 

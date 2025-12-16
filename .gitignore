@@ -54,3 +54,4 @@ admin/static/uploads/
 admin/__pycache__/
 admin/*.pyc
 admin/.env
+.env*.local

@@ -205,5 +205,129 @@ def delete_coffee_api(coffee_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ========== ENDPOINT DE DEBUG ==========
+@app.route('/admin/api/debug/blob', methods=['GET'])
+def debug_blob():
+    """Endpoint para debuggear el estado de Blob Storage"""
+    import sys
+    import os
+    sys.path.insert(0, str(BACKEND_DIR))
+    from db.connection import BLOB_TOKEN, BLOB_STORE_ID, DB_PATH, _get_blob_url
+    import tempfile
+    
+    info = {
+        'has_token': bool(BLOB_TOKEN),
+        'token_prefix': BLOB_TOKEN[:20] + '...' if BLOB_TOKEN else 'N/A',
+        'store_id': BLOB_STORE_ID,
+        'blob_url': _get_blob_url(),
+        'db_path': DB_PATH,
+        'db_exists_locally': os.path.exists(DB_PATH),
+        'db_size_local': os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0,
+        'tmp_dir': tempfile.gettempdir(),
+    }
+    
+    # Intentar verificar si el blob existe
+    import requests
+    try:
+        resp = requests.head(_get_blob_url(), timeout=3)
+        info['blob_exists'] = resp.status_code == 200
+        info['blob_status_code'] = resp.status_code
+        if resp.status_code == 200:
+            info['blob_size'] = resp.headers.get('content-length', 'unknown')
+            info['blob_last_modified'] = resp.headers.get('last-modified', 'unknown')
+    except Exception as e:
+        info['blob_check_error'] = str(e)
+    
+    return jsonify(info)
+
+
+@app.route('/admin/api/debug/test-upload', methods=['POST'])
+def test_upload():
+    """Hace un cambio y verifica si sube a Blob"""
+    import sys
+    sys.path.insert(0, str(BACKEND_DIR))
+    from db.connection import get_connection, _upload_db_to_blob, _get_blob_url, BLOB_TOKEN, DB_PATH
+    import time
+    import requests
+    import os
+    
+    result = {'steps': []}
+    
+    try:
+        # Paso 1: Obtener conexión y hacer un cambio dummy
+        result['steps'].append('Obteniendo conexión...')
+        con = get_connection()
+        result['connection_type'] = str(type(con))
+        result['steps'].append(f'Tipo de conexión: {type(con).__name__}')
+        
+        cur = con.cursor()
+        
+        # Paso 2: Hacer un UPDATE
+        result['steps'].append('Actualizando pedido 1...')
+        cur.execute("UPDATE orders SET notes = ? WHERE id = 1", (f"Test: {time.time()}",))
+        
+        # Paso 3: Commit (debe activar el wrapper)
+        result['steps'].append('Ejecutando commit...')
+        con.commit()
+        result['steps'].append('Commit completado')
+        
+        # Paso 4: Intentar upload manual
+        result['steps'].append('Intentando upload manual...')
+        result['has_token'] = bool(BLOB_TOKEN)
+        result['db_path'] = DB_PATH
+        result['db_exists'] = os.path.exists(DB_PATH)
+        result['db_size'] = os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0
+        
+        if os.path.exists(DB_PATH):
+            with open(DB_PATH, 'rb') as f:
+                db_content = f.read()
+            
+            result['steps'].append(f'Leyendo DB: {len(db_content)} bytes')
+            
+            # Intentar subir manualmente
+            response = requests.put(
+                'https://blob.vercel-storage.com/onsen-coffee.db',
+                data=db_content,
+                headers={
+                    'authorization': f'Bearer {BLOB_TOKEN}',
+                    'x-content-type': 'application/x-sqlite3',
+                },
+                params={
+                    'addRandomSuffix': '0',
+                    'access': 'public'
+                },
+                timeout=30
+            )
+            
+            result['upload_status'] = response.status_code
+            result['upload_response'] = response.text[:500]
+            result['steps'].append(f'Upload status: {response.status_code}')
+            
+            if response.status_code in [200, 201]:
+                upload_data = response.json()
+                result['upload_url'] = upload_data.get('url', 'N/A')
+                result['steps'].append('✓ Upload exitoso')
+            else:
+                result['steps'].append(f'✗ Upload falló: {response.text[:200]}')
+        
+        # Paso 5: Verificar Blob
+        result['steps'].append('Verificando Blob...')
+        time.sleep(1)
+        
+        resp = requests.head(_get_blob_url(), timeout=3)
+        result['blob_status'] = resp.status_code
+        result['blob_last_modified'] = resp.headers.get('last-modified', 'unknown')
+        result['blob_size'] = resp.headers.get('content-length', 'unknown')
+        
+        con.close()
+        result['success'] = True
+        
+    except Exception as e:
+        result['error'] = str(e)
+        import traceback
+        result['traceback'] = traceback.format_exc()
+    
+    return jsonify(result)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
