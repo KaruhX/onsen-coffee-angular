@@ -365,7 +365,7 @@
                                 <div class="space-y-2">
                                     ${order.items.map(item => `
                                         <div class="flex justify-between text-sm text-gray-700">
-                                            <span>${item.quantity}x ${item.products?.name || 'Producto'}</span>
+                                            <span>${item.quantity}x ${item.name}</span>
                                             <span class="font-medium">€${(item.price * item.quantity).toFixed(2)}</span>
                                         </div>
                                     `).join('')}

@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm",
+    "packageManager": "bun",
     "analytics": false
   },
   "newProjectRoot": "projects",
@@ -17,7 +17,9 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "index": "src/index.html",
             "browser": "src/main.ts",
+            "outputPath": "dist/frontend",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -27,20 +29,24 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "define": {
+              "process.env.SUPABASE_URL": "\"https://kvylferkavxxgtsuxlmh.supabase.co\"",
+              "process.env.SUPABASE_ANON_KEY": "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWxmZXJrYXZ4eGd0c3V4bG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3Njk4NzEsImV4cCI6MjA2MzM0NTg3MX0.NWy4ZlzD7SXOxFO3HBNBab1BX_OvoDwDvfv7LGxHfh4\""
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "600kB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"

@@ -19,11 +19,7 @@
   ],
   "routes": [
     {
-      "src": "/admin/(.*)",
-      "dest": "admin/app.py"
-    },
-    {
-      "src": "/admin",
+      "src": "/admin(?:/(.*))?",
       "dest": "admin/app.py"
     },
     {
@@ -31,12 +27,13 @@
       "dest": "api/index.py"
     },
     {
-      "src": "/static/(.*)",
-      "dest": "api/index.py"
+      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|svg|woff|woff2|ttf|eot|map|json|txt))$",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/index.html"
     }
   ]
 }
+

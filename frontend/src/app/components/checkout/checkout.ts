@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CoffeeService } from '../../services/coffee-service';
+import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-checkout',
@@ -14,6 +15,7 @@ export class Checkout implements OnInit {
   private readonly coffeeService = inject(CoffeeService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly supabase = inject(SupabaseService);
 
   readonly cart = this.coffeeService.cart;
   readonly cartTotal = this.coffeeService.cartTotal;
@@ -41,6 +43,14 @@ export class Checkout implements OnInit {
   }
 
   ngOnInit(): void {
+    // Verificar si está autenticado
+    if (!this.supabase.isAuthenticated) {
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: '/checkout' },
+      });
+      return;
+    }
+
     this.coffeeService.getCart().subscribe();
   }
 

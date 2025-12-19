@@ -1,16 +1,18 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { CartItem, CheckoutData, Coffee, Order } from '../model/models';
+import { SupabaseService } from './supabase.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CoffeeService {
-  private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api';
   private cartItems = signal<CartItem[]>([]);
   private coffees = signal<Coffee[]>([]);
+
+  constructor(private readonly http: HttpClient, private readonly supabase: SupabaseService) {}
 
   readonly cart = this.cartItems.asReadonly();
   readonly cartCount = computed(() =>
@@ -19,17 +21,26 @@ export class CoffeeService {
   readonly cartTotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.price * item.quantity, 0)
   );
-  readonly shippingCost = computed(() => (this.cartTotal() > 0 ? 4.99 : 0));
+  readonly shippingCost = computed(() => 0); // Envío gratis
   readonly orderTotal = computed(() => this.cartTotal() + this.shippingCost());
 
+  // Obtener productos desde el backend Python
   getCoffees(): Observable<Coffee[]> {
     return this.http
       .get<Coffee[]>(`${this.apiUrl}/coffees`)
-      .pipe(tap((coffees) => this.coffees.set(coffees)));
+      .pipe(tap((products) => this.coffees.set(products)));
   }
 
   getCoffeeById(id: number): Observable<Coffee> {
     return this.http.get<Coffee>(`${this.apiUrl}/coffees/${id}`);
+  }
+
+  getCoffeeBySlug(slug: string): Observable<Coffee> {
+    return this.http.get<Coffee>(`${this.apiUrl}/coffees/slug/${slug}`);
+  }
+
+  getFeaturedCoffees(): Observable<Coffee[]> {
+    return this.http.get<Coffee[]>(`${this.apiUrl}/coffees/featured`);
   }
 
   getCart(): Observable<CartItem[]> {

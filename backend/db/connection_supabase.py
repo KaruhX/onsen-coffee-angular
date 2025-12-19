@@ -80,9 +80,10 @@ def get_db_connection():
 
 
 def init_database():
-    """Inicializa la base de datos creando las tablas si no existen"""
-    from . import schema
-    schema.create_tables()
+    """Inicializa la base de datos - Las tablas ya existen en Supabase"""
+    # Las tablas ya están creadas en Supabase, no necesitamos ejecutar create_tables()
+    print("Using existing Supabase tables")
+    pass
 
 
 # Funciones helper para operaciones comunes

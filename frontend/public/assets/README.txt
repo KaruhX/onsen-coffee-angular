@@ -1,0 +1,1 @@
+Coloca aquí las imágenes y archivos estáticos que el frontend necesite (por ejemplo, coffee-1.jpg, logos, etc).

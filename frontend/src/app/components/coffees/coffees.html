@@ -1,5 +1,5 @@
 <!-- Hero Section -->
-<section class="relative bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 pt-32 pb-20">
+<section class="relative bg-linear-to-br from-emerald-900 via-emerald-800 to-teal-900 pt-32 pb-20">
   <div class="absolute inset-0 opacity-10"
     style="background-image: url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1920&q=80'); background-size: cover;">
   </div>
@@ -25,7 +25,7 @@
         class="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer"
         (click)="seeDetails(coffee)">
         <!-- Image -->
-        <div class="relative h-64 overflow-hidden bg-gradient-to-br from-emerald-100 to-emerald-50">
+        <div class="relative h-64 overflow-hidden bg-linear-to-br from-emerald-100 to-emerald-50">
           @if(coffee.image_url) {
           <img [src]="coffee.image_url" [alt]="coffee.name"
             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
@@ -35,7 +35,7 @@
           }
           <!-- Overlay -->
           <div
-            class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            class="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           </div>
           <!-- Quick Action -->
           <button

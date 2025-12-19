@@ -90,7 +90,25 @@ def getCart():
     if not isinstance(cart, list):
         cart = []
         session['cart'] = cart
-    return jsonify(cart)
+    
+    # Enriquecer el carrito con datos de productos
+    enriched_cart = []
+    for item in cart:
+        coffee_id = item.get('coffeeId')
+        if coffee_id:
+            coffee = repo.obtainCoffeeById(coffee_id)
+            if coffee and not coffee.get('error'):
+                enriched_item = {
+                    'id': coffee.get('id'),
+                    'name': coffee.get('name', 'Producto sin nombre'),
+                    'price': coffee.get('price', 0),
+                    'image_url': coffee.get('image_url'),
+                    'origin': coffee.get('origin', 'Origen desconocido'),
+                    'quantity': item.get('quantity', 1)
+                }
+                enriched_cart.append(enriched_item)
+    
+    return jsonify(enriched_cart)
 
 @api.route("/cart", methods=["POST"])
 def addToCart():
@@ -113,7 +131,25 @@ def addToCart():
         cart.append({'coffeeId': coffee_id, 'quantity': quantity})
 
     session['cart'] = cart
-    return jsonify({"status": "ok", "cart": cart})
+    
+    # Devolver carrito enriquecido
+    enriched_cart = []
+    for item in cart:
+        cid = item.get('coffeeId')
+        if cid:
+            coffee = repo.obtainCoffeeById(cid)
+            if coffee and not coffee.get('error'):
+                enriched_item = {
+                    'id': coffee.get('id'),
+                    'name': coffee.get('name', 'Producto sin nombre'),
+                    'price': coffee.get('price', 0),
+                    'image_url': coffee.get('image_url'),
+                    'origin': coffee.get('origin', 'Origen desconocido'),
+                    'quantity': item.get('quantity', 1)
+                }
+                enriched_cart.append(enriched_item)
+    
+    return jsonify({"status": "ok", "cart": enriched_cart})
 
 @api.route("/cart/<int:coffee_id>", methods=["PUT"])
 def updateCartItem(coffee_id):
@@ -130,7 +166,25 @@ def updateCartItem(coffee_id):
             break
 
     session['cart'] = cart
-    return jsonify({"status": "ok", "cart": cart})
+    
+    # Devolver carrito enriquecido
+    enriched_cart = []
+    for item in cart:
+        cid = item.get('coffeeId')
+        if cid:
+            coffee = repo.obtainCoffeeById(cid)
+            if coffee and not coffee.get('error'):
+                enriched_item = {
+                    'id': coffee.get('id'),
+                    'name': coffee.get('name', 'Producto sin nombre'),
+                    'price': coffee.get('price', 0),
+                    'image_url': coffee.get('image_url'),
+                    'origin': coffee.get('origin', 'Origen desconocido'),
+                    'quantity': item.get('quantity', 1)
+                }
+                enriched_cart.append(enriched_item)
+    
+    return jsonify({"status": "ok", "cart": enriched_cart})
 
 @api.route("/cart/<int:coffee_id>", methods=["DELETE"])
 def removeFromCart(coffee_id):
@@ -139,7 +193,25 @@ def removeFromCart(coffee_id):
         cart = []
     cart = [item for item in cart if item.get('coffeeId') != coffee_id]
     session['cart'] = cart
-    return jsonify({"status": "ok", "cart": cart})
+    
+    # Devolver carrito enriquecido
+    enriched_cart = []
+    for item in cart:
+        cid = item.get('coffeeId')
+        if cid:
+            coffee = repo.obtainCoffeeById(cid)
+            if coffee and not coffee.get('error'):
+                enriched_item = {
+                    'id': coffee.get('id'),
+                    'name': coffee.get('name', 'Producto sin nombre'),
+                    'price': coffee.get('price', 0),
+                    'image_url': coffee.get('image_url'),
+                    'origin': coffee.get('origin', 'Origen desconocido'),
+                    'quantity': item.get('quantity', 1)
+                }
+                enriched_cart.append(enriched_item)
+    
+    return jsonify({"status": "ok", "cart": enriched_cart})
 
 @api.route("/cart", methods=["DELETE"])
 def clearCart():

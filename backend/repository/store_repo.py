@@ -136,49 +136,40 @@ def getNewProducts(limit=6):
     return response.data
 
 # ============================================
-# USERS
+# USERS - Adaptado para Supabase con profiles
 # ============================================
 
 def obtainUsers():
+    """Obtiene todos los usuarios (perfiles)"""
     client = get_client()
-    response = client.table('users').select('id, email, first_name, last_name, phone, role, is_active, created_at').execute()
+    response = client.table('profiles').select('id, email, full_name, phone, role, created_at, updated_at').execute()
     return response.data
 
 def obtainUserById(user_id):
+    """Obtiene un usuario por ID"""
     client = get_client()
-    response = client.table('users').select('id, email, first_name, last_name, phone, role, is_active, created_at').eq('id', user_id).execute()
+    response = client.table('profiles').select('id, email, full_name, phone, role, address, created_at, updated_at').eq('id', user_id).execute()
     return response.data[0] if response.data else {"error": "User not found"}
-
-def createUser(user_data):
-    """Crea un nuevo usuario"""
-    client = get_client()
-    
-    data = {
-        'email': user_data.get('email'),
-        'first_name': user_data.get('first_name'),
-        'last_name': user_data.get('last_name'),
-        'phone': user_data.get('phone'),
-        'role': user_data.get('role', 'customer'),
-        'is_active': user_data.get('is_active', True)
-    }
-    
-    response = client.table('users').insert(data).execute()
-    return {"status": "ok", "id": response.data[0]['id']}
 
 def updateUserRole(user_id, role):
     """Actualiza el rol de un usuario"""
     client = get_client()
-    response = client.table('users').update({'role': role}).eq('id', user_id).execute()
+    response = client.table('profiles').update({'role': role, 'updated_at': 'now()'}).eq('id', user_id).execute()
     return {"status": "ok"}
 
 def deleteUser(user_id):
-    """Desactiva un usuario (soft delete)"""
+    """Elimina un usuario (esto también elimina el auth.user asociado por la FK)"""
     client = get_client()
-    response = client.table('users').update({'is_active': False}).eq('id', user_id).execute()
+    # En Supabase, eliminar el perfil eliminará el usuario de auth por la FK
+    response = client.table('profiles').delete().eq('id', user_id).execute()
     return {"status": "ok"}
 
 # ============================================
 # ORDERS
+# ============================================
+
+# ============================================
+# ORDERS - Adaptado para Supabase
 # ============================================
 
 def registerOrder(order_data):
@@ -189,34 +180,21 @@ def registerOrder(order_data):
     if not order_data.get('items') or len(order_data.get('items', [])) == 0:
         raise ValueError("El pedido debe contener al menos un producto")
     
-    # Calcular subtotal desde los items
+    # Calcular total desde los items
     items = order_data.get('items', [])
-    subtotal = 0
+    total = 0
     for item in items:
         price = float(item.get('price', 0))
         quantity = int(item.get('quantity', 1))
-        subtotal += price * quantity
-    
-    shipping_cost = float(order_data.get('shipping_cost', 4.99))
-    total = subtotal + shipping_cost
+        total += price * quantity
     
     # Crear el pedido
     order_insert = {
         'user_id': order_data.get('user_id'),
         'status': 'pending',
-        'subtotal': subtotal,
-        'shipping_cost': shipping_cost,
         'total': total,
-        'customer_name': order_data.get('customer_name'),
-        'customer_email': order_data.get('customer_email'),
-        'customer_phone': order_data.get('customer_phone'),
-        'shipping_address': order_data.get('shipping_address'),
-        'shipping_city': order_data.get('shipping_city'),
-        'shipping_postal_code': order_data.get('shipping_postal_code'),
-        'shipping_country': order_data.get('shipping_country', 'España'),
-        'payment_method': order_data.get('payment_method', 'card'),
-        'payment_status': 'pending',
-        'notes': order_data.get('notes')
+        'shipping_address': order_data.get('shipping_address', {}),
+        'payment_intent': order_data.get('payment_intent')
     }
     
     response = client.table('orders').insert(order_insert).execute()
@@ -228,18 +206,26 @@ def registerOrder(order_data):
             'order_id': order_id,
             'product_id': item.get('product_id'),
             'quantity': item.get('quantity'),
-            'unit_price': item.get('price')
+            'price': item.get('price')
         }
         client.table('order_items').insert(item_insert).execute()
     
     return {"status": "ok", "order_id": order_id, "total": total}
 
 def getOrderById(order_id):
-    """Obtiene un pedido con sus items"""
+    """Obtiene un pedido con sus items y perfil de usuario"""
     client = get_client()
     
-    # Obtener el pedido
-    order_response = client.table('orders').select('*').eq('id', order_id).execute()
+    # Obtener el pedido con información del usuario
+    order_response = client.table('orders').select('''
+        *,
+        profiles:user_id (
+            id,
+            email,
+            full_name,
+            phone
+        )
+    ''').eq('id', order_id).execute()
     
     if not order_response.data:
         return {"error": "Order not found"}
@@ -249,75 +235,93 @@ def getOrderById(order_id):
     # Obtener los items del pedido con información del producto
     items_response = client.table('order_items').select('''
         *,
-        products(name, image_url, origin)
+        products (
+            id,
+            name,
+            image,
+            slug
+        )
     ''').eq('order_id', order_id).execute()
     
     order['items'] = items_response.data
+    
     return order
 
-def getOrdersByEmail(email):
-    """Obtiene todos los pedidos de un email"""
-    client = get_client()
-    response = client.table('orders').select('*').eq('customer_email', email).order('created_at', desc=True).execute()
-    return response.data
-
 def getAllOrders():
-    """Obtiene todos los pedidos"""
+    """Obtiene todos los pedidos con información de usuario e items"""
     client = get_client()
-    response = client.table('orders').select('*').order('created_at', desc=True).execute()
-    return response.data
+    response = client.table('orders').select('''
+        *,
+        profiles:user_id (
+            id,
+            email,
+            full_name,
+            phone
+        )
+    ''').order('created_at', desc=True).execute()
+    
+    # Obtener items para cada pedido
+    orders = response.data
+    for order in orders:
+        items_response = client.table('order_items').select('''
+            *,
+            products (
+                id,
+                name,
+                image,
+                slug
+            )
+        ''').eq('order_id', order['id']).execute()
+        order['items'] = items_response.data
+    
+    return orders
 
 def obtainOrders(status_filter='all'):
     """Obtiene pedidos con filtro opcional de estado"""
     client = get_client()
     
-    if status_filter and status_filter != 'all':
-        response = client.table('orders').select('*').eq('status', status_filter).order('created_at', desc=True).execute()
-    else:
-        response = client.table('orders').select('*').order('created_at', desc=True).execute()
+    query = client.table('orders').select('''
+        *,
+        profiles:user_id (
+            id,
+            email,
+            full_name,
+            phone
+        )
+    ''')
     
-    return response.data
+    if status_filter and status_filter != 'all':
+        query = query.eq('status', status_filter)
+    
+    response = query.order('created_at', desc=True).execute()
+    
+    # Obtener items para cada pedido
+    orders = response.data
+    for order in orders:
+        items_response = client.table('order_items').select('''
+            *,
+            products (
+                id,
+                name,
+                image,
+                slug
+            )
+        ''').eq('order_id', order['id']).execute()
+        order['items'] = items_response.data
+    
+    return orders
 
-def updateOrderStatus(order_id, status, tracking_number=None):
+def updateOrderStatus(order_id, status):
     """Actualiza el estado de un pedido"""
     client = get_client()
-    
-    data = {'status': status}
-    if tracking_number:
-        data['tracking_number'] = tracking_number
-    
-    response = client.table('orders').update(data).eq('id', order_id).execute()
-    return {"status": "ok"}
-
-def updateOrderInfo(order_id, data):
-    """Actualiza información de un pedido"""
-    client = get_client()
-    
-    update_data = {}
-    allowed_fields = [
-        'customer_name', 'customer_email', 'customer_phone',
-        'shipping_address', 'shipping_city', 'shipping_postal_code', 'shipping_country',
-        'payment_method', 'payment_status', 'tracking_number', 'notes', 
-        'estimated_delivery', 'status'
-    ]
-    
-    for field in allowed_fields:
-        if field in data:
-            update_data[field] = data[field]
-    
-    response = client.table('orders').update(update_data).eq('id', order_id).execute()
+    response = client.table('orders').update({'status': status}).eq('id', order_id).execute()
     return {"status": "ok"}
 
 def deleteOrder(order_id):
-    """Elimina un pedido y sus items"""
+    """Elimina un pedido y sus items (cascade delete en Supabase)"""
     client = get_client()
-    
-    # Primero eliminar los items
-    client.table('order_items').delete().eq('order_id', order_id).execute()
-    
-    # Luego eliminar el pedido
-    client.table('orders').delete().eq('id', order_id).execute()
-    
+    # Los items se eliminan automáticamente por la FK con ON DELETE CASCADE
+    response = client.table('orders').delete().eq('id', order_id).execute()
     return {"status": "ok"}
 
 # ============================================
